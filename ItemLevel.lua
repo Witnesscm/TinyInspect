@@ -315,7 +315,9 @@ PaperDollFrame:HookScript("OnShow", function()
 end)
 
 LibEvent:attachEvent("PLAYER_EQUIPMENT_CHANGED", function(_, slotID)
-    SetPaperDollItemLevel(PaperDollSlots[slotID], "player")
+    if CharacterFrame:IsShown() then
+        SetPaperDollItemLevel(PaperDollSlots[slotID], "player")
+    end
 end)
 
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
