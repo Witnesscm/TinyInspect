@@ -288,8 +288,34 @@ local function SetPaperDollItemLevel(self, unit)
     end
 end
 
-hooksecurefunc("PaperDollItemSlotButton_Update",function(self)
-    SetPaperDollItemLevel(self, "player")
+local PaperDollSlots = {
+    [1]	 = "CharacterHeadSlot",
+    [2]	 = "CharacterNeckSlot",
+    [3]	 = "CharacterShoulderSlot",
+    [4]	 = "CharacterShirtSlot",
+    [5]	 = "CharacterChestSlot",
+    [6]	 = "CharacterWaistSlot",
+    [7]	 = "CharacterLegsSlot",
+    [8]	 = "CharacterFeetSlot",
+    [9]	 = "CharacterWristSlot",
+    [10] = "CharacterHandsSlot",
+    [11] = "CharacterFinger0Slot",
+    [12] = "CharacterFinger0Slot",
+    [13] = "CharacterTrinket0Slot",
+    [14] = "CharacterTrinket1Slot",
+    [15] = "CharacterBackSlot",
+    [16] = "CharacterMainHandSlot",
+    [17] = "CharacterSecondaryHandSlot",
+}
+
+PaperDollFrame:HookScript("OnShow", function()
+    for _, slot in ipairs(PaperDollSlots) do
+        SetPaperDollItemLevel(slot, "player")
+    end
+end)
+
+LibEvent:attachEvent("PLAYER_EQUIPMENT_CHANGED", function(_, slotID)
+    SetPaperDollItemLevel(PaperDollSlots[slotID], "player")
 end)
 
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
