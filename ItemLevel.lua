@@ -203,6 +203,10 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
         elseif (self.Tooltip) then
             link = select(2, self.Tooltip:GetItem())
             SetItemLevel(self, link)
+        --(Bank)
+        elseif (tonumber(itemIDOrLink) and self.hasItem) then
+            link = GetContainerItemLink(self:GetParent():GetID(), self:GetID())
+            SetItemLevel(self, link)
         else
             SetItemLevel(self, itemIDOrLink)
         end
@@ -382,7 +386,7 @@ ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", filter)
 ChatFrame_AddMessageEventFilter("CHAT_MSG_BATTLEGROUND", filter)
 ChatFrame_AddMessageEventFilter("CHAT_MSG_LOOT", filter)
 
---据说首次拾取大秘钥匙是个item:180653:
+--[[据说首次拾取大秘钥匙是个item:180653:
 function firstLootKeystone(Hyperlink)
     local map, level = string.match(Hyperlink, "|Hitem:180653::::::::%d*:%d*:%d*:%d*:%d*:(%d+):(%d+):")
     if (map and level) then
@@ -400,6 +404,7 @@ ChatFrame_AddMessageEventFilter("CHAT_MSG_LOOT", function(self, event, msg, ...)
     end
     return false, msg, ...
 end)
+]]
 
 -- 位置設置
 LibEvent:attachTrigger("ITEMLEVEL_FRAME_SHOWN", function(self, frame, parent, category)

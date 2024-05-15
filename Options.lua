@@ -5,7 +5,7 @@
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 
-local VERSION = 2.6
+local VERSION = 2.7
 
 local addon, ns = ...
 
@@ -17,7 +17,7 @@ end})
 
 local DefaultDB = {
     version = VERSION,                    --配置的版本號
-    ShowItemBorder = true,                --物品直角邊框
+    ShowItemBorder = false,               --物品直角邊框 #暂停用#
     EnableItemLevel  = true,              --物品等級
       ShowColoredItemLevelString = false, --裝等文字隨物品品質
       ShowCorruptedMark = false,          --腐蚀装备标记
@@ -31,7 +31,7 @@ local DefaultDB = {
         EnableItemLevelAltEquipment = true,
         EnableItemLevelPaperDoll = true,
         EnableItemLevelGuildNews = true,
-        EnableItemLevelChat = true,
+        EnableItemLevelChat = false,
         EnableItemLevelLoot = true,
         EnableItemLevelOther = true,
     ShowInspectAngularBorder = false,     --觀察面板直角邊框
@@ -74,7 +74,7 @@ local DefaultDB = {
 }
 
 local options = {
-    { key = "ShowItemBorder" },
+    --{ key = "ShowItemBorder" },
     { key = "ShowGemAndEnchant",
         subcheck = DefaultDB.EnchantParts,
     },
@@ -95,7 +95,7 @@ local options = {
         -- { key = "GuildBank" },
         -- { key = "Merchant" },
         -- { key = "Trade" },
-        -- { key = "PaperDoll" },
+        { key = "PaperDoll" },
         -- { key = "Loot" },
       },
       anchorkey = "ItemLevelAnchorPoint",

@@ -142,7 +142,7 @@ local function GetInspectItemListFrame(parent)
 end
 
 --等級字符
-local ItemLevelPattern = gsub(ITEM_LEVEL, "%%d", "%%d")  -- %%.2f
+local ItemLevelPattern = gsub(ITEM_LEVEL, "%%d", "%%.1f")  -- %%.2f
 
 --顯示面板
 function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
@@ -218,6 +218,7 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         mframe:SetAlpha(0.4)
     end
     if (oframe and oframe.level <= 0) then
+        oframe.link = nil
         oframe:SetAlpha(0.4)
     end
     frame:SetWidth(width + 36)
