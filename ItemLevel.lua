@@ -300,7 +300,7 @@ local PaperDollSlots = {
     [9]	 = "CharacterWristSlot",
     [10] = "CharacterHandsSlot",
     [11] = "CharacterFinger0Slot",
-    [12] = "CharacterFinger0Slot",
+    [12] = "CharacterFinger1Slot",
     [13] = "CharacterTrinket0Slot",
     [14] = "CharacterTrinket1Slot",
     [15] = "CharacterBackSlot",
@@ -310,13 +310,13 @@ local PaperDollSlots = {
 
 PaperDollFrame:HookScript("OnShow", function()
     for _, slot in ipairs(PaperDollSlots) do
-        SetPaperDollItemLevel(slot, "player")
+        SetPaperDollItemLevel(_G[slot], "player")
     end
 end)
 
 LibEvent:attachEvent("PLAYER_EQUIPMENT_CHANGED", function(_, slotID)
     if CharacterFrame:IsShown() then
-        SetPaperDollItemLevel(PaperDollSlots[slotID], "player")
+        SetPaperDollItemLevel(_G[PaperDollSlots[slotID]], "player")
     end
 end)
 
