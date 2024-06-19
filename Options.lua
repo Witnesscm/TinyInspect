@@ -336,13 +336,12 @@ local function InitCheckbox(parent)
     end
 end
 
-local frame = CreateFrame("Frame", nil, UIParent)
+local frame = CreateFrame("Frame")
 frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 frame.title:SetPoint("TOPLEFT", 18, -16)
 frame.title:SetText(addon)
-frame.name = addon
-
 CreateCheckbox(options, frame, frame.title, 18, 9)
+Settings.RegisterAddOnCategory(Settings.RegisterCanvasLayoutCategory(frame, addon))
 
 LibEvent:attachEvent("VARIABLES_LOADED", function()
     if (not TinyInspectDB or not TinyInspectDB.version) then
@@ -358,7 +357,6 @@ LibEvent:attachEvent("VARIABLES_LOADED", function()
     InitCheckbox(frame)
 end)
 
-InterfaceOptions_AddCategory(frame)
 SLASH_TinyInspect1 = "/tinyinspect"
 SLASH_TinyInspect2 = "/ti"
 function SlashCmdList.TinyInspect(msg, editbox)
