@@ -46,7 +46,7 @@ local function GetItemLevelFrame(self, category)
         end
         self.ItemLevelFrame = CreateFrame("Frame", nil, self)
         self.ItemLevelFrame:SetScale(max(0.75, h<32 and h/32 or 1))
-        self.ItemLevelFrame:SetFrameLevel(10)
+        self.ItemLevelFrame:SetFrameLevel(self:GetFrameLevel() + 1)
         self.ItemLevelFrame:SetSize(w, h)
         self.ItemLevelFrame:SetPoint("CENTER", anchor, "CENTER", 0, 0)
         self.ItemLevelFrame.slotString = self.ItemLevelFrame:CreateFontString(nil, "OVERLAY")
