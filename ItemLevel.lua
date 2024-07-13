@@ -13,7 +13,7 @@ local WEAPON = WEAPON or "Weapon"
 local MOUNTS = MOUNTS or "Mount"
 local RELICSLOT = RELICSLOT or "Relic"
 local ARTIFACT_POWER = ARTIFACT_POWER or "Artifact"
-if (GetLocale():sub(1,2) == "zh") then ARTIFACT_POWER = "能量" end
+if (GetLocale():sub(1, 2) == "zh") then ARTIFACT_POWER = "能量" end
 
 --fixed for 8.x
 local GetLootInfoByIndex = EJ_GetLootInfoByIndex
@@ -35,7 +35,7 @@ end
 --框架 #category Bag|Bank|Merchant|Trade|GuildBank|Auction|AltEquipment|PaperDoll|Loot
 local function GetItemLevelFrame(self, category)
     if (not self.ItemLevelFrame) then
-        local fontAdjust = GetLocale():sub(1,2) == "zh" and 0 or -3
+        local fontAdjust = GetLocale():sub(1, 2) == "zh" and 0 or -3
         local anchor, w, h = self.IconBorder or self, self:GetSize()
         local ww, hh = anchor:GetSize()
         if (ww == 0 or hh == 0) then
@@ -45,19 +45,19 @@ local function GetItemLevelFrame(self, category)
             w, h = min(w, ww), min(h, hh)
         end
         self.ItemLevelFrame = CreateFrame("Frame", nil, self)
-        self.ItemLevelFrame:SetScale(max(0.75, h<32 and h/32 or 1))
+        self.ItemLevelFrame:SetScale(max(0.75, h < 32 and h / 32 or 1))
         self.ItemLevelFrame:SetFrameLevel(self:GetFrameLevel() + 1)
         self.ItemLevelFrame:SetSize(w, h)
         self.ItemLevelFrame:SetPoint("CENTER", anchor, "CENTER", 0, 0)
         self.ItemLevelFrame.slotString = self.ItemLevelFrame:CreateFontString(nil, "OVERLAY")
-        self.ItemLevelFrame.slotString:SetFont(STANDARD_TEXT_FONT, 10+fontAdjust, "OUTLINE")
+        self.ItemLevelFrame.slotString:SetFont(STANDARD_TEXT_FONT, 10 + fontAdjust, "OUTLINE")
         self.ItemLevelFrame.slotString:SetPoint("BOTTOMRIGHT", 1, 2)
         self.ItemLevelFrame.slotString:SetTextColor(1, 1, 1)
         self.ItemLevelFrame.slotString:SetJustifyH("RIGHT")
         self.ItemLevelFrame.slotString:SetWidth(30)
         self.ItemLevelFrame.slotString:SetHeight(0)
         self.ItemLevelFrame.levelString = self.ItemLevelFrame:CreateFontString(nil, "OVERLAY")
-        self.ItemLevelFrame.levelString:SetFont(STANDARD_TEXT_FONT, 14+fontAdjust, "OUTLINE")
+        self.ItemLevelFrame.levelString:SetFont(STANDARD_TEXT_FONT, 14 + fontAdjust, "OUTLINE")
         self.ItemLevelFrame.levelString:SetPoint("TOP")
         self.ItemLevelFrame.levelString:SetTextColor(1, 0.82, 0)
         LibEvent:trigger("ITEMLEVEL_FRAME_CREATED", self.ItemLevelFrame, self)
@@ -77,11 +77,11 @@ end
 --設置裝等文字
 local function SetItemLevelString(self, text, quality, link)
     if (quality and TinyInspectDB and TinyInspectDB.ShowColoredItemLevelString) then
-        local r, g, b, hex = GetItemQualityColor(quality)
+        local r, g, b, hex = C_Item.GetItemQualityColor(quality)
         text = format("|c%s%s|r", hex, text)
     end
     --腐蚀的物品加个标记
-    if (TinyInspectDB and TinyInspectDB.ShowCorruptedMark and link and IsCorruptedItem(link)) then
+    if (TinyInspectDB and TinyInspectDB.ShowCorruptedMark and link and C_Item.IsCorruptedItem(link)) then
         text = text .. "|cffFF3300★|r"
     end
     self:SetText(text)
@@ -95,7 +95,7 @@ local function SetItemSlotString(self, class, equipSlot, link)
             slotText = _G[equipSlot] or ""
         elseif (class == ARMOR) then
             slotText = class
-        elseif (link and IsArtifactPowerItem(link)) then
+        elseif (link and C_Item.IsArtifactPowerItem(link)) then
             slotText = ARTIFACT_POWER
         elseif (link and IsArtifactRelicItem(link)) then
             slotText = RELICSLOT
@@ -124,7 +124,7 @@ local function SetItemLevelScheduled(button, ItemLevelFrame, link)
                 self.button.OrigItemEquipSlot = equipSlot
                 return true
             end
-        end,
+        end
     })
 end
 
@@ -139,10 +139,10 @@ local function SetItemLevel(self, link, category, BagID, SlotID)
         local level = ""
         local _, count, quality, class, subclass, equipSlot, linklevel
         if (link and string.match(link, "item:(%d+):")) then
-            _, _, quality, _, _, class, subclass, _, equipSlot = GetItemInfo(link)
+            _, _, quality, _, _, class, subclass, _, equipSlot = C_Item.GetItemInfo(link)
             --除了装备和圣物外,其它不显示装等
             if ((equipSlot and string.find(equipSlot, "INVTYPE_"))
-                or (subclass and string.find(subclass, RELICSLOT))) then
+                    or (subclass and string.find(subclass, RELICSLOT))) then
                 count, level = LibItemInfo:GetItemInfo(link, nil, true)
             else
                 count = 0
@@ -182,9 +182,9 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
     if (itemIDOrLink) then
         local link
         --Artifact
-        if (IsArtifactRelicItem(itemIDOrLink) or IsArtifactPowerItem(itemIDOrLink)) then
+        if (IsArtifactRelicItem(itemIDOrLink) or C_Item.IsArtifactPowerItem(itemIDOrLink)) then
             SetItemLevel(self)
-        --QuestInfo
+            --QuestInfo
         elseif (self.type and self.objectType == "item") then
             if (QuestInfoFrame and QuestInfoFrame.questLog) then
                 link = LibItemInfo:GetQuestItemlink(self.type, self:GetID())
@@ -192,18 +192,18 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
                 link = GetQuestItemLink(self.type, self:GetID())
             end
             if (not link) then
-                link = select(2, GetItemInfo(itemIDOrLink))
+                link = select(2, C_Item.GetItemInfo(itemIDOrLink))
             end
             SetItemLevel(self, link)
-        --EncounterJournal
+            --EncounterJournal
         elseif (self.encounterID and self.link) then
             local itemInfo = GetLootInfoByIndex(self.index)
             SetItemLevel(self, itemInfo.link or self.link)
-        --EmbeddedItemTooltip
+            --EmbeddedItemTooltip
         elseif (self.Tooltip) then
             link = select(2, self.Tooltip:GetItem())
             SetItemLevel(self, link)
-        --(Bank)
+            --(Bank)
         elseif (tonumber(itemIDOrLink) and self.hasItem) then
             link = GetContainerItemLink(self:GetParent():GetID(), self:GetID())
             SetItemLevel(self, link)
@@ -240,10 +240,10 @@ LibEvent:attachEvent("ADDON_LOADED", function(self, addonName)
     if (addonName == "Blizzard_Communities" and GuildNewsButton_SetText) then
         GuildNewsItemCache = {}
         hooksecurefunc("GuildNewsButton_SetText", function(button, text_color, text, text1, text2, ...)
-            if (not TinyInspectDB or 
-                not TinyInspectDB.EnableItemLevel or 
-                not TinyInspectDB.EnableItemLevelGuildNews) then
-              return
+            if (not TinyInspectDB or
+                    not TinyInspectDB.EnableItemLevel or
+                    not TinyInspectDB.EnableItemLevelGuildNews) then
+                return
             end
             if (text2 and type(text2) == "string") then
                 local link = string.match(text2, "|H(item:%d+:.-)|h.-|h")
@@ -251,7 +251,7 @@ LibEvent:attachEvent("ADDON_LOADED", function(self, addonName)
                     local level = GuildNewsItemCache[link] or select(2, LibItemInfo:GetItemInfo(link))
                     if (level > 0) then
                         GuildNewsItemCache[link] = level
-                        text2 = text2:gsub("(%|Hitem:%d+:.-%|h%[)(.-)(%]%|h)", "%1"..level..":%2%3")
+                        text2 = text2:gsub("(%|Hitem:%d+:.-%|h%[)(.-)(%]%|h)", "%1" .. level .. ":%2%3")
                         button.text:SetFormattedText(text, text1, text2, ...)
                     end
                 end
@@ -276,7 +276,7 @@ local function SetPaperDollItemLevel(self, unit)
             local _, mlevel, _, _, mquality = LibItemInfo:GetUnitItemInfo(unit, 16)
             local _, olevel, _, _, oquality = LibItemInfo:GetUnitItemInfo(unit, 17)
             if (mlevel > 0 and olevel > 0 and (mquality == 6 or oquality == 6)) then
-                SetItemLevelString(frame.levelString, max(mlevel,olevel), mquality or oquality, link)
+                SetItemLevelString(frame.levelString, max(mlevel, olevel), mquality or oquality, link)
             end
         end
     else
@@ -305,7 +305,7 @@ local PaperDollSlots = {
     [14] = "CharacterTrinket1Slot",
     [15] = "CharacterBackSlot",
     [16] = "CharacterMainHandSlot",
-    [17] = "CharacterSecondaryHandSlot",
+    [17] = "CharacterSecondaryHandSlot"
 }
 
 PaperDollFrame:HookScript("OnShow", function()
@@ -323,11 +323,11 @@ end)
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
     if (InspectFrame and InspectFrame.unit and UnitGUID(InspectFrame.unit) == data.guid) then
         for _, button in ipairs({
-             InspectHeadSlot,InspectNeckSlot,InspectShoulderSlot,InspectBackSlot,InspectChestSlot,InspectWristSlot,
-             InspectHandsSlot,InspectWaistSlot,InspectLegsSlot,InspectFeetSlot,InspectFinger0Slot,InspectFinger1Slot,
-             InspectTrinket0Slot,InspectTrinket1Slot,InspectMainHandSlot,InspectSecondaryHandSlot
-             , InspectShirtSlot, InspectTabardSlot
-            }) do
+            InspectHeadSlot, InspectNeckSlot, InspectShoulderSlot, InspectBackSlot, InspectChestSlot, InspectWristSlot,
+            InspectHandsSlot, InspectWaistSlot, InspectLegsSlot, InspectFeetSlot, InspectFinger0Slot, InspectFinger1Slot,
+            InspectTrinket0Slot, InspectTrinket1Slot, InspectMainHandSlot, InspectSecondaryHandSlot
+        , InspectShirtSlot, InspectTabardSlot
+        }) do
             SetPaperDollItemLevel(button, InspectFrame.unit)
         end
     end
@@ -337,11 +337,11 @@ LibEvent:attachEvent("ADDON_LOADED", function(self, addonName)
     if (addonName == "Blizzard_InspectUI") then
         hooksecurefunc(InspectFrame, "Hide", function()
             for _, button in ipairs({
-                 InspectHeadSlot,InspectNeckSlot,InspectShoulderSlot,InspectBackSlot,InspectChestSlot,InspectWristSlot,
-                 InspectHandsSlot,InspectWaistSlot,InspectLegsSlot,InspectFeetSlot,InspectFinger0Slot,InspectFinger1Slot,
-                 InspectTrinket0Slot,InspectTrinket1Slot,InspectMainHandSlot,InspectSecondaryHandSlot
-                 , InspectShirtSlot, InspectTabardSlot
-                }) do
+                InspectHeadSlot, InspectNeckSlot, InspectShoulderSlot, InspectBackSlot, InspectChestSlot, InspectWristSlot,
+                InspectHandsSlot, InspectWaistSlot, InspectLegsSlot, InspectFeetSlot, InspectFinger0Slot, InspectFinger1Slot,
+                InspectTrinket0Slot, InspectTrinket1Slot, InspectMainHandSlot, InspectSecondaryHandSlot
+            , InspectShirtSlot, InspectTabardSlot
+            }) do
                 SetPaperDollItemLevel(button)
             end
         end)
@@ -373,7 +373,7 @@ local function ChatItemLevel(Hyperlink)
             level = nil
         end
         if (level) then
-            local n, stats = 0, GetItemStats(link)
+            local n, stats = 0, C_Item.GetItemStats(link)
             for key, num in pairs(stats) do
                 if (string.find(key, "EMPTY_SOCKET_")) then
                     n = n + num
@@ -381,11 +381,11 @@ local function ChatItemLevel(Hyperlink)
             end
             local gem = string.rep("|TInterface\\ItemSocketingFrame\\UI-EmptySocket-Prismatic:0|t", n)
             if (quality == 6 and class == WEAPON) then gem = "" end
-            Hyperlink = Hyperlink:gsub("|h%[(.-)%]|h", "|h["..level..":"..name.."]|h"..gem)
+            Hyperlink = Hyperlink:gsub("|h%[(.-)%]|h", "|h[" .. level .. ":" .. name .. "]|h" .. gem)
         end
         Caches[Hyperlink] = Hyperlink
     elseif (subclass and subclass == MOUNTS) then
-        Hyperlink = Hyperlink:gsub("|h%[(.-)%]|h", "|h[("..subclass..")%1]|h")
+        Hyperlink = Hyperlink:gsub("|h%[(.-)%]|h", "|h[(" .. subclass .. ")%1]|h")
         Caches[Hyperlink] = Hyperlink
     elseif (count == 0) then
         Caches[Hyperlink] = Hyperlink
@@ -436,7 +436,7 @@ end)
 
 -- 位置設置
 LibEvent:attachTrigger("ITEMLEVEL_FRAME_SHOWN", function(self, frame, parent, category)
-    if (TinyInspectDB and not TinyInspectDB["EnableItemLevel"..category]) then
+    if (TinyInspectDB and not TinyInspectDB["EnableItemLevel" .. category]) then
         return frame:Hide()
     end
     if (TinyInspectDB and TinyInspectDB.PaperDollItemLevelOutsideString) then

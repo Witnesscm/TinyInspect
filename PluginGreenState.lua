@@ -94,7 +94,7 @@ LibEvent:attachTrigger("INSPECT_ITEMFRAME_UPDATED", function(this, itemframe)
         if (itemframe[k]) then itemframe[k]:SetAlpha(0.05) end
     end
     if (itemframe.link) then
-        local stats = GetItemStats(itemframe.link)
+        local stats = C_Item.GetItemStats(itemframe.link)
         for k in pairs(stats) do
             if (shown[k] and itemframe[k]) then
                 itemframe[k]:SetAlpha(1)

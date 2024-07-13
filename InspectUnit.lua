@@ -7,7 +7,7 @@ local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
 
 --bliz func
-local IsCorruptedItem = IsCorruptedItem or function(link) return false end
+local IsCorruptedItem = C_Item.IsCorruptedItem or function(link) return false end
 
 --裝備清單
 local slots = {
@@ -285,7 +285,7 @@ LibEvent:attachTrigger("INSPECT_ITEMFRAME_UPDATED", function(self, itemframe)
     local r, g, b = 0, 0.9, 0.9
     if (TinyInspectDB and TinyInspectDB.ShowInspectColoredLabel) then
         if (itemframe.quality and itemframe.quality > 4) then
-            r, g, b = GetItemQualityColor(itemframe.quality)
+            r, g, b = C_Item.GetItemQualityColor(itemframe.quality)
         elseif (itemframe.name and not itemframe.link) then
             r, g, b = 0.9, 0.8, 0.4
         elseif (not itemframe.link) then

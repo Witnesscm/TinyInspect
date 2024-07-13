@@ -22,7 +22,7 @@ local unittip = CreateFrame("GameTooltip", "LibItemLevelTooltip2", UIParent, "Ga
 function lib:HasLocalCached(item)
     if (not item or item == "" or item == "0") then return true end
     if (tonumber(item)) then
-        return select(10, GetItemInfo(tonumber(item)))
+        return select(10, C_Item.GetItemInfo(tonumber(item)))
     else
         local id, gem1, gem2, gem3 = string.match(item, "item:(%d+):[^:]*:(%d-):(%d-):(%d-):")
         return self:HasLocalCached(id) and self:HasLocalCached(gem1) and self:HasLocalCached(gem2) and self:HasLocalCached(gem3)
@@ -130,7 +130,7 @@ function lib:GetItemInfoViaTooltip(link, stats)
     if (withoutExtra) then
         return 0, level
     else
-        return 0, level, GetItemInfo(link)
+        return 0, level, C_Item.GetItemInfo(link)
     end
 end
 
@@ -177,7 +177,7 @@ function lib:GetUnitItemInfo(unit, index, stats)
     end
     self:GetStatsViaTooltip(unittip, stats)
     if (string.match(link, "item:(%d+):")) then
-        return 0, tonumber(level) or 0, GetItemInfo(link)
+        return 0, tonumber(level) or 0, C_Item.GetItemInfo(link)
     else
         local line = _G[unittip:GetName().."TextLeft1"]
         local r, g, b = line:GetTextColor()

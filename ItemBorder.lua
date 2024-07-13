@@ -84,7 +84,7 @@ end)
 --設置物品直角邊框
 LibEvent:attachTrigger("SET_ITEM_ANGULARBORDER", function(self, frame, quality, itemIDOrLink)
     if (quality) then
-        local r, g, b = GetItemQualityColor(quality)
+        local r, g, b = C_Item.GetItemQualityColor(quality)
         if (quality <= 1) then
             r = r - 0.3
             g = g - 0.3
