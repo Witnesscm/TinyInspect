@@ -341,7 +341,8 @@ frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 frame.title:SetPoint("TOPLEFT", 18, -16)
 frame.title:SetText(addon)
 CreateCheckbox(options, frame, frame.title, 18, 9)
-Settings.RegisterAddOnCategory(Settings.RegisterCanvasLayoutCategory(frame, addon))
+local category = Settings.RegisterCanvasLayoutCategory(frame, addon)
+Settings.RegisterAddOnCategory(category)
 
 LibEvent:attachEvent("VARIABLES_LOADED", function()
     if (not TinyInspectDB or not TinyInspectDB.version) then
@@ -363,6 +364,5 @@ function SlashCmdList.TinyInspect(msg, editbox)
     if (msg == "raid") then
         return ToggleFrame(TinyInspectRaidFrame)
     end
-    InterfaceOptionsFrame_OpenToCategory(frame)
-    InterfaceOptionsFrame_OpenToCategory(frame)
+    Settings.OpenToCategory(category.ID)
 end
