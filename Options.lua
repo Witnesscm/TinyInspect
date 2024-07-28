@@ -59,9 +59,9 @@ local DefaultDB = {
             false,
             {true, "CHESTSLOT", },
             {false, "WAISTSLOT", },
-            {false, "LEGSSLOT", },
+            {true, "LEGSSLOT", },
             {true, "FEETSLOT", },
-            {false, "WRISTSLOT", },
+            {true, "WRISTSLOT", },
             {false, "HANDSSLOT", },
             {true, "FINGER0SLOT", },
             {true, "FINGER1SLOT", },
@@ -69,7 +69,7 @@ local DefaultDB = {
             {false, "TRINKET1SLOT", },
             {true, "BACKSLOT", },
             {true, "MAINHANDSLOT", },
-            {false, "SECONDARYHANDSLOT", },
+            {true, "SECONDARYHANDSLOT", },
         },
 }
 
