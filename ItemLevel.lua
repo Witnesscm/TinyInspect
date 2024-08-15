@@ -165,6 +165,41 @@ local function SetItemLevel(self, link, category, BagID, SlotID)
     end
 end
 
+-- Gem
+local socketWatchList = {
+	["BLUE"] = true,
+	["RED"] = true,
+	["YELLOW"] = true,
+	["COGWHEEL"] = true,
+	["HYDRAULIC"] = true,
+	["META"] = true,
+	["PRISMATIC"] = true,
+	["PUNCHCARDBLUE"] = true,
+	["PUNCHCARDRED"] = true,
+	["PUNCHCARDYELLOW"] = true,
+	["DOMINATION"] = true,
+	["PRIMORDIAL"] = true,
+}
+
+local function GetSocketTexture(socket, count)
+	return strrep("|TInterface\\ItemSocketingFrame\\UI-EmptySocket-"..socket..":0|t", count)
+end
+
+local function IsItemHasGem(link)
+	local text = ""
+	local stats = C_Item.GetItemStats(link)
+	if stats then
+		for stat, count in pairs(stats) do
+			local socket = strmatch(stat, "EMPTY_SOCKET_(%S+)")
+			if socket and socketWatchList[socket] then
+				if socket == "PRIMORDIAL" then socket = "META" end -- primordial texture is missing, use meta instead, needs review
+				text = text..GetSocketTexture(socket, count)
+			end
+		end
+	end
+	return text
+end
+
 --[[ All ]]
 hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, suppressOverlays, isBound)
     if (self.ItemLevelCategory or self.isBag) then return end
@@ -234,27 +269,24 @@ if (EquipmentFlyout_DisplayButton) then
 end
 
 -- GuildNews
-LibEvent:attachEvent("ADDON_LOADED", function(self, addonName)
-    if (addonName == "Blizzard_Communities" and GuildNewsButton_SetText) then
-        GuildNewsItemCache = {}
-        hooksecurefunc("GuildNewsButton_SetText", function(button, text_color, text, text1, text2, ...)
-            if (not TinyInspectDB or 
-                not TinyInspectDB.EnableItemLevel or 
-                not TinyInspectDB.EnableItemLevelGuildNews) then
-              return
+local GuildNewsItemCache = {}
+hooksecurefunc("GuildNewsButton_SetText", function(button, text_color, text, text1, text2, ...)
+    if (not TinyInspectDB or
+        not TinyInspectDB.EnableItemLevel or
+        not TinyInspectDB.EnableItemLevelGuildNews) then
+        return
+    end
+
+    if (text2 and type(text2) == "string") then
+        local link = string.match(text2, "|H(item:%d+:.-)|h.-|h")
+        if (link) then
+            local level = GuildNewsItemCache[link] or select(2, LibItemInfo:GetItemInfo(link))
+            if (level > 0) then
+                GuildNewsItemCache[link] = level
+                text2 = text2:gsub("(%|Hitem:%d+:.-%|h%[)(.-)(%]%|h)", "%1"..level..":%2%3"..IsItemHasGem(link))
+                button.text:SetFormattedText(text, text1, text2, ...)
             end
-            if (text2 and type(text2) == "string") then
-                local link = string.match(text2, "|H(item:%d+:.-)|h.-|h")
-                if (link) then
-                    local level = GuildNewsItemCache[link] or select(2, LibItemInfo:GetItemInfo(link))
-                    if (level > 0) then
-                        GuildNewsItemCache[link] = level
-                        text2 = text2:gsub("(%|Hitem:%d+:.-%|h%[)(.-)(%]%|h)", "%1"..level..":%2%3")
-                        button.text:SetFormattedText(text, text1, text2, ...)
-                    end
-                end
-            end
-        end)
+        end
     end
 end)
 
@@ -379,13 +411,7 @@ local function ChatItemLevel(Hyperlink)
             level = nil
         end
         if (level) then
-            local n, stats = 0, C_Item.GetItemStats(link)
-            for key, num in pairs(stats) do
-                if (string.find(key, "EMPTY_SOCKET_")) then
-                    n = n + num
-                end
-            end
-            local gem = string.rep("|TInterface\\ItemSocketingFrame\\UI-EmptySocket-Prismatic:0|t", n)
+            local gem = IsItemHasGem(link)
             if (quality == 6 and class == WEAPON) then gem = "" end
             Hyperlink = Hyperlink:gsub("|h%[(.-)%]|h", "|h["..level..":"..name.."]|h"..gem)
         end
