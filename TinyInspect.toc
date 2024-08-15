@@ -22,7 +22,6 @@ InspectUnitStats.lua
 InspectUnitGemAndEnchant.lua
 InspectUnitSpecialization.lua
 InspectMouse.lua
-##InspectGroupMember.lua
 InspectParty.lua
 InspectRaid.lua
 PluginGreenState.lua
