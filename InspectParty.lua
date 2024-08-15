@@ -149,12 +149,8 @@ local label = "<" .. (ITEM_LEVEL_ABBR or "ItemLevel") .. ">"
 --角色類型
 local function GetRoleIcon(unit)
     local role = UnitGroupRolesAssigned(unit)
-    if (role == "TANK") then
-        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:0:19:22:41|t"
-    elseif (role == "HEALER") then
-        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:1:20|t"
-    elseif (role == "DAMAGER") then
-        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:22:41|t"
+    if (role == "TANK" or role == "HEALER" or role == "DAMAGER") then
+        return CreateAtlasMarkup(GetMicroIconForRole(role), 14, 14)
     else
         return ""
     end
