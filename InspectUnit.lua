@@ -122,7 +122,7 @@ local function GetInspectItemListFrame(parent)
             frame["item"..i] = itemframe
             LibEvent:trigger("INSPECT_ITEMFRAME_CREATED", itemframe)
         end
-        
+
         frame.closeButton = CreateFrame("Button", nil, frame)
         frame.closeButton:SetSize(12, 12)
         frame.closeButton:SetScale(0.85)
