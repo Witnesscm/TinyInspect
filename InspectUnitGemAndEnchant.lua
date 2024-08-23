@@ -8,7 +8,6 @@
 local addon, ns = ...
 
 local LibItemGem = LibStub:GetLibrary("LibItemGem.7000")
-local LibSchedule = LibStub:GetLibrary("LibSchedule.7000")
 local LibItemEnchant = LibStub:GetLibrary("LibItemEnchant.7000")
 
 
@@ -43,20 +42,20 @@ local function CreateIconFrame(frame, index)
         end
     end)
     icon.bg = icon:CreateTexture(nil, "BACKGROUND")
-    icon.bg:SetSize(16, 16)
+    icon.bg:SetSize(15, 15)
     icon.bg:SetPoint("CENTER")
-    icon.bg:SetTexture("Interface\\AddOns\\"..addon.."\\texture\\GemBg")
+    icon.bg:SetTexture("Interface\\Masks\\CircleMaskScalable")
     icon.texture = icon:CreateTexture(nil, "BORDER")
     icon.texture:SetSize(12, 12)
     icon.texture:SetPoint("CENTER")
-    icon.texture:SetMask("Interface\\FriendsFrame\\Battlenet-Portrait")
+    icon.texture:SetMask("Interface\\Masks\\CircleMaskScalable")
     frame["xicon"..index] = icon
     return frame["xicon"..index]
 end
 
 --隱藏所有圖標框架
 local function HideAllIconFrame(frame)
-    local index = 1 
+    local index = 1
     while (frame["xicon"..index]) do
         frame["xicon"..index].title = nil
         frame["xicon"..index].itemLink = nil
