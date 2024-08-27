@@ -14,9 +14,6 @@ local RELICSLOT = RELICSLOT or "Relic"
 local ARTIFACT_POWER = ARTIFACT_POWER or "Artifact"
 if (GetLocale():sub(1,2) == "zh") then ARTIFACT_POWER = "能量" end
 
-local MAX_GUILDBANK_SLOTS_PER_TAB = 98
-local NUM_SLOTS_PER_GUILDBANK_GROUP = 14
-
 --框架 #category Bag|Bank|Merchant|Trade|GuildBank|Auction|AltEquipment|PaperDoll|Loot
 local function GetItemLevelFrame(self, category)
     if (not self.ItemLevelFrame) then
@@ -208,7 +205,6 @@ local function IsItemHasGem(link)
 end
 
 --[[ All ]]
---[[
 hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, suppressOverlays, isBound)
     if (self.ItemLevelCategory or self.isBag) then return end
     local frame = GetItemLevelFrame(self)
@@ -251,9 +247,8 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
         SetItemSlotString(frame.slotString)
     end
 end)
---]]
 
--- Bag
+-- Bag & Bank
 local function SetContainerItemLevel(self)
     local category = self:IsBankBag() and "Bank" or "Bag"
     for _, button in self:EnumerateValidItems() do
@@ -280,6 +275,7 @@ if BankFrameItemButton_Update then
     end)
 end
 
+-- Warband Bank
 if BankPanelItemButtonMixin then
     hooksecurefunc(BankPanelItemButtonMixin, "Refresh", function(self)
         SetItemLevel(self, self.itemInfo and self.itemInfo.hyperlink, "Bank")
@@ -292,42 +288,6 @@ if MerchantFrameItem_UpdateQuality then
         SetItemLevel(self.ItemButton, link, "Merchant")
     end)
 end
-
--- Trade
-if TradeFrame_UpdatePlayerItem then
-    hooksecurefunc("TradeFrame_UpdatePlayerItem", function(id)
-        SetItemLevel(_G["TradePlayerItem"..id.."ItemButton"], GetTradePlayerItemLink(id), "Trade")
-    end)
-end
-
-if TradeFrame_UpdateTargetItem then
-    hooksecurefunc("TradeFrame_UpdateTargetItem", function(id)
-        SetItemLevel(_G["TradeRecipientItem"..id.."ItemButton"], GetTradeTargetItemLink(id), "Trade")
-    end)
-end
-
--- GuildBank
-LibEvent:attachEvent("ADDON_LOADED", function(_, addonName)
-    if addonName == "Blizzard_GuildBankUI" then
-        hooksecurefunc(_G.GuildBankFrame, "Update", function(self)
-            if self.mode == "bank" then
-                local tab = GetCurrentGuildBankTab()
-                local button, index, column
-                for i = 1, MAX_GUILDBANK_SLOTS_PER_TAB do
-                    index = mod(i, NUM_SLOTS_PER_GUILDBANK_GROUP)
-                    if index == 0 then
-                        index = NUM_SLOTS_PER_GUILDBANK_GROUP
-                    end
-                    column = ceil((i-0.5)/NUM_SLOTS_PER_GUILDBANK_GROUP)
-                    button = self.Columns[column].Buttons[index]
-                    if button and button:IsShown() then
-                        SetItemLevel(button, GetGuildBankItemLink(tab, i), "GuildBank")
-                    end
-                end
-            end
-        end)
-    end
-end)
 
 -- ALT
 if (EquipmentFlyout_DisplayButton) then
@@ -369,13 +329,6 @@ if GuildNewsButton_SetText then
                 end
             end
         end
-    end)
-end
-
--- Loot
-if LootFrameItemElementMixin then
-    hooksecurefunc(LootFrameItemElementMixin, "Init", function(self)
-        SetItemLevel(self.Item, GetLootSlotLink(self:GetSlotIndex()), "Loot")
     end)
 end
 
