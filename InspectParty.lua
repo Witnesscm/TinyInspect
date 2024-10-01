@@ -105,7 +105,7 @@ end)
 --人員增加時觸發 @trigger PARTY_INSPECT_TIMEOUT @trigger PARTY_INSPECT_DONE
 LibEvent:attachEvent("GROUP_ROSTER_UPDATE", function(self)
     if (TinyInspectDB and not TinyInspectDB.EnablePartyItemLevel) then return end
-    if (IsInRaid()) then return end
+    if (IsInRaid() or not IsInGroup(LE_PARTY_CATEGORY_HOME)) then return end
     local numCurrent = GetNumSubgroupMembers()
     if (numCurrent > numMembers) then
         GetMembers(numCurrent)
