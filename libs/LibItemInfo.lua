@@ -42,7 +42,7 @@ function lib:GetStatsViaTooltip(tip, stats)
                 statName = statName:gsub("與$", "") --zhTW
                 statName = statName:gsub("和$", "") --zhTW
                 statName = statName:gsub("，", "")  --zhCN
-                statName = statName:gsub("%s*&$", "") --enUS
+                statName = statName:gsub("%s*$", "") --enUS
                 statValue = statValue:gsub(",","")
                 statValue = tonumber(statValue) or 0
                 if (not stats[statName]) then

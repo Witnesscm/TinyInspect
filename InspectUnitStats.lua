@@ -12,8 +12,38 @@ else return end
 
 local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
 
-local function GetStateValue(unit, state, value, default)
-    return value or default
+local attributesCategory = {
+    ITEM_MOD_STRENGTH_SHORT,
+    ITEM_MOD_AGILITY_SHORT,
+    ITEM_MOD_INTELLECT_SHORT,
+    ITEM_MOD_STAMINA_SHORT
+}
+
+local enhancementsCategory = {
+    ITEM_MOD_CRIT_RATING_SHORT,
+    ITEM_MOD_HASTE_RATING_SHORT,
+    ITEM_MOD_MASTERY_RATING_SHORT,
+    ITEM_MOD_VERSATILITY,
+    ITEM_MOD_CR_LIFESTEAL_SHORT,
+    ITEM_MOD_CR_AVOIDANCE_SHORT,
+    ITEM_MOD_CR_SPEED_SHORT
+}
+
+local function GetStatFrame(frame, index)
+    if not frame["stat"..index] then
+        frame["stat"..index] = CreateFrame("FRAME", nil, frame, "CharacterStatFrameTemplate")
+        frame["stat"..index]:EnableMouse(false)
+        frame["stat"..index]:SetWidth(197)
+        frame["stat"..index]:SetPoint("TOPLEFT", 0, -17*index+13)
+        frame["stat"..index].Background:SetVertexColor(0, 0, 0)
+        frame["stat"..index].Value:SetPoint("RIGHT", -64, 0)
+        frame["stat"..index].Label:SetFontObject(ChatFontNormal)
+        frame["stat"..index].Value:SetFontObject(ChatFontNormal)
+        frame["stat"..index].PlayerValue = frame["stat"..index]:CreateFontString(nil, "ARTWORK", "ChatFontNormal")
+        frame["stat"..index].PlayerValue:SetPoint("LEFT", frame["stat"..index], "RIGHT", -54, 0)
+    end
+
+    return frame["stat"..index]
 end
 
 function ShowInspectItemStatsFrame(frame, unit)
@@ -36,16 +66,6 @@ function ShowInspectItemStatsFrame(frame, unit)
         local statsFrame = CreateFrame("Frame", nil, frame, "InsetFrameTemplate3")
         statsFrame:SetSize(197, 157)
         statsFrame:SetPoint("TOPLEFT", frame, "TOPRIGHT", 0, -1)
-        for i = 1, 20 do
-            statsFrame["stat"..i] = CreateFrame("FRAME", nil, statsFrame, "CharacterStatFrameTemplate")
-            statsFrame["stat"..i]:EnableMouse(false)
-            statsFrame["stat"..i]:SetWidth(197)
-            statsFrame["stat"..i]:SetPoint("TOPLEFT", 0, -17*i+13)
-            statsFrame["stat"..i].Background:SetVertexColor(0, 0, 0)
-            statsFrame["stat"..i].Value:SetPoint("RIGHT", -64, 0)
-            statsFrame["stat"..i].PlayerValue = statsFrame["stat"..i]:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-            statsFrame["stat"..i].PlayerValue:SetPoint("LEFT", statsFrame["stat"..i], "RIGHT", -54, 0)
-        end
         local mask = statsFrame:CreateTexture()
         mask:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
         mask:SetPoint("TOPLEFT", statsFrame, "TOPRIGHT", -58, -3)
@@ -64,72 +84,50 @@ function ShowInspectItemStatsFrame(frame, unit)
     table.insert(baseInfo, {label = HEALTH, iv = AbbreviateLargeNumbers(UnitHealthMax(unit)), pv = AbbreviateLargeNumbers(UnitHealthMax("player")) })
     table.insert(baseInfo, {label = STAT_AVERAGE_ITEM_LEVEL, iv = format("%.1f",inspectItemLevel), pv = format("%.1f",playerItemLevel) })
     local index = 1
+    local stat
     for _, v in pairs(baseInfo) do
-        frame.statsFrame["stat"..index].Label:SetText(v.label)
-        frame.statsFrame["stat"..index].Label:SetTextColor(0.2, 1, 1)
-        frame.statsFrame["stat"..index].Value:SetText(v.iv)
-        frame.statsFrame["stat"..index].Value:SetTextColor(0, 0.7, 0.9)
-        frame.statsFrame["stat"..index].PlayerValue:SetText(v.pv)
-        frame.statsFrame["stat"..index].PlayerValue:SetTextColor(0, 0.7, 0.9)
-        frame.statsFrame["stat"..index].Background:SetShown(index%2~=0)
-        frame.statsFrame["stat"..index]:Show()
+        stat = GetStatFrame(frame.statsFrame, index)
+        stat.Label:SetText(v.label)
+        stat.Label:SetTextColor(0.2, 1, 1)
+        stat.Value:SetText(v.iv)
+        stat.Value:SetTextColor(0, 0.7, 0.9)
+        stat.PlayerValue:SetText(v.pv)
+        stat.PlayerValue:SetTextColor(0, 0.7, 0.9)
+        stat.Background:SetShown(index%2~=0)
+        stat:Show()
         index = index + 1
     end
-    for k, v in pairs(inspectStats) do
-        if (v.r + v.g + v.b < 1.2) then
-            frame.statsFrame["stat"..index].Label:SetText(k)
-            frame.statsFrame["stat"..index].Label:SetTextColor(v.r, v.g, v.b)
-            frame.statsFrame["stat"..index].Value:SetText(GetStateValue(unit,k,v.value))
-            frame.statsFrame["stat"..index].Value:SetTextColor(v.r, v.g, v.b)
-            frame.statsFrame["stat"..index].PlayerValue:SetText(GetStateValue("player",k,playerStats[k] and playerStats[k].value,"-"))
-            frame.statsFrame["stat"..index].PlayerValue:SetTextColor(v.r, v.g, v.b)
-            frame.statsFrame["stat"..index].Background:SetShown(index%2~=0)
-            frame.statsFrame["stat"..index]:Show()
-            index = index + 1
+    for _, k in ipairs(attributesCategory) do
+        stat = GetStatFrame(frame.statsFrame, index)
+        stat.Label:SetText(k)
+        stat.Label:SetTextColor(1, 0.82, 0)
+        if inspectStats[k] then
+            stat.Value:SetText(inspectStats[k].value)
+            stat.Value:SetTextColor(inspectStats[k].r, inspectStats[k].g, inspectStats[k].b)
+        else
+            stat.Value:SetText("-")
         end
+        if playerStats[k] then
+            stat.PlayerValue:SetText(playerStats[k].value)
+            stat.PlayerValue:SetTextColor(playerStats[k].r, playerStats[k].g, playerStats[k].b)
+        else
+            stat.PlayerValue:SetText("-")
+        end
+        stat.Background:SetShown(index%2~=0)
+        stat:Show()
+        index = index + 1
     end
-    for k, v in pairs(playerStats) do
-        if (not inspectStats[k] and v.r + v.g + v.b < 1.2) then
-            frame.statsFrame["stat"..index].Label:SetText(k)
-            frame.statsFrame["stat"..index].Label:SetTextColor(v.r, v.g, v.b)
-            frame.statsFrame["stat"..index].Value:SetText("-")
-            frame.statsFrame["stat"..index].Value:SetTextColor(v.r, v.g, v.b)
-            frame.statsFrame["stat"..index].PlayerValue:SetText(GetStateValue("player",k,v.value))
-            frame.statsFrame["stat"..index].PlayerValue:SetTextColor(v.r, v.g, v.b)
-            frame.statsFrame["stat"..index].Background:SetShown(index%2~=0)
-            frame.statsFrame["stat"..index]:Show()
-            index = index + 1
-        end
-    end
-    for k, v in pairs(inspectStats) do
-        if (v.r + v.g + v.b > 1.2) then
-            frame.statsFrame["stat"..index].Label:SetText(k)
-            frame.statsFrame["stat"..index].Label:SetTextColor(1, 0.82, 0)
-            frame.statsFrame["stat"..index].Value:SetText(v.value)
-            frame.statsFrame["stat"..index].Value:SetTextColor(v.r, v.g, v.b)
-            if (playerStats[k]) then
-                frame.statsFrame["stat"..index].PlayerValue:SetText(playerStats[k].value)
-                frame.statsFrame["stat"..index].PlayerValue:SetTextColor(playerStats[k].r, playerStats[k].g, playerStats[k].b)
-            else
-                frame.statsFrame["stat"..index].PlayerValue:SetText("-")
-            end
-            frame.statsFrame["stat"..index].Background:SetShown(index%2~=0)
-            frame.statsFrame["stat"..index]:Show()
-            index = index + 1
-        end
-    end
-    for k, v in pairs(playerStats) do
-        if (not inspectStats[k] and v.r + v.g + v.b > 1.2) then
-            frame.statsFrame["stat"..index].Label:SetText(k)
-            frame.statsFrame["stat"..index].Label:SetTextColor(1, 0.82, 0)
-            frame.statsFrame["stat"..index].Value:SetText("-")
-            frame.statsFrame["stat"..index].Value:SetTextColor(v.r, v.g, v.b)
-            frame.statsFrame["stat"..index].PlayerValue:SetText(v.value)
-            frame.statsFrame["stat"..index].PlayerValue:SetTextColor(v.r, v.g, v.b)
-            frame.statsFrame["stat"..index].Background:SetShown(index%2~=0)
-            frame.statsFrame["stat"..index]:Show()
-            index = index + 1
-        end
+    for _, k in ipairs(enhancementsCategory) do
+        stat = GetStatFrame(frame.statsFrame, index)
+        stat.Label:SetText(k)
+        stat.Label:SetTextColor(0, 1, 0)
+        stat.Value:SetText(inspectStats[k] and inspectStats[k].value or "-")
+        stat.Value:SetTextColor(0, 1, 0)
+        stat.PlayerValue:SetText(playerStats[k] and playerStats[k].value or "-")
+        stat.PlayerValue:SetTextColor(0, 1, 0)
+        stat.Background:SetShown(index%2~=0)
+        stat:Show()
+        index = index + 1
     end
     frame.statsFrame:SetHeight(index*17-10)
     while (frame.statsFrame["stat"..index]) do
