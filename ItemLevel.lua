@@ -449,7 +449,7 @@ local function ChatItemLevel(Hyperlink)
 end
 
 local function filter(self, event, msg, ...)
-    if (TinyInspectDB and TinyInspectDB.EnableItemLevelChat) then
+    if (TinyInspectDB and TinyInspectDB.EnableItemLevel and TinyInspectDB.EnableItemLevelChat) then
         msg = msg:gsub("(|Hitem:%d+:.-|h.-|h)", ChatItemLevel)
     end
     return false, msg, ...
