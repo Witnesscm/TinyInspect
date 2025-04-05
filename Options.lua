@@ -267,16 +267,15 @@ local function CreateAnchorFrame(anchorkey, parent)
         end)
         frame[anchorPoint] = button
     end
-    local frame = CreateFrame("Frame", nil, parent.SubtypeFrame or parent, BackdropTemplateMixin and "BackdropTemplate,ThinBorderTemplate" or "ThinBorderTemplate")
+    local frame = CreateFrame("Frame", nil, parent.SubtypeFrame or parent, BackdropTemplateMixin and "BackdropTemplate")
     frame.anchorkey = anchorkey
     frame:SetBackdrop({
-            bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile     = true, tileSize = 8, edgeSize = 16,
-            insets   = {left = 4, right = 4, top = 4, bottom = 4}
+            bgFile   = "Interface\\Buttons\\WHITE8X8",
+            edgeFile = "Interface\\Buttons\\WHITE8X8",
+            edgeSize = 2,
     })
     frame:SetBackdropColor(0, 0, 0, 0.7)
-    frame:SetBackdropBorderColor(1, 1, 1, 0)
+    frame:SetBackdropBorderColor(1, 1, 1, 1)
     frame:SetSize(80, 80)
     frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 530, 44)
     CreateAnchorButton(frame, "TOPLEFT")
