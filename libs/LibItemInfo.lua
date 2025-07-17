@@ -30,20 +30,19 @@ function lib:HasLocalCached(item)
 end
 
 --獲取TIP中的屬性信息 (zhTW|zhCN|enUS)
-function lib:GetStatsViaTooltip(tip, stats)
+function lib:GetStatsViaTooltip(tooltipData, stats)
     if (type(stats) == "table") then
-        local line, text, r, g, b, statValue, statName
-        for i = 2, tip:NumLines() do
-            line = _G[tip:GetName().."TextLeft" .. i]
-            text = line:GetText() or ""
-            r, g, b = line:GetTextColor()
+        local text, r, g, b
+        for _, lineData in ipairs(tooltipData.lines) do
+            text = lineData.leftText or ""
+            r, g, b = lineData.leftColor:GetRGB()
             for statValue, statName in string.gmatch(text, "%+([0-9,]+)([^%+%|]+)") do
                 statName = strtrim(statName)
                 statName = statName:gsub("與$", "") --zhTW
                 statName = statName:gsub("和$", "") --zhTW
-                statName = statName:gsub("，", "")  --zhCN
+                statName = statName:gsub("，", "") --zhCN
                 statName = statName:gsub("%s*$", "") --enUS
-                statValue = statValue:gsub(",","")
+                statValue = statValue:gsub(",", "")
                 statValue = tonumber(statValue) or 0
                 if (not stats[statName]) then
                     stats[statName] = { value = statValue, r = r, g = g, b = b }
@@ -63,19 +62,18 @@ end
 
 -- koKR
 if (locale == "koKR") then
-    function lib:GetStatsViaTooltip(tip, stats)
+    function lib:GetStatsViaTooltip(tooltipData, stats)
         if (type(stats) == "table") then
-            local line, text, r, g, b, statValue, statName
-            for i = 2, tip:NumLines() do
-                line = _G[tip:GetName().."TextLeft" .. i]
-                text = line:GetText() or ""
-                r, g, b = line:GetTextColor()
+            local text, r, g, b
+            for _, lineData in ipairs(tooltipData.lines) do
+                text = lineData.leftText or ""
+                r, g, b = lineData.leftColor:GetRGB()
                 for statName, statValue in string.gmatch(text, "([^%+]+)%+([0-9,]+)") do
                     statName = statName:gsub("|c%x%x%x%x%x%x%x%x", "")
                     statName = statName:gsub(".-:", "")
                     statName = strtrim(statName)
                     statName = statName:gsub("%s*/%s*", "")
-                    statValue = statValue:gsub(",","")
+                    statValue = statValue:gsub(",", "")
                     statValue = tonumber(statValue) or 0
                     if (not stats[statName]) then
                         stats[statName] = { value = statValue, r = r, g = g, b = b }
@@ -95,14 +93,9 @@ if (locale == "koKR") then
 end
 
 
---獲取物品實際等級信息
-function lib:GetItemInfo(link, stats, withoutExtra)
-    return self:GetItemInfoViaTooltip(link, stats, withoutExtra)
-end
-
 --獲取物品實際等級信息通過Tooltip
-function lib:GetItemInfoViaTooltip(link, stats)
-    if (not link or link == "") then
+function lib:GetItemInfoViaTooltip(link, tooltipData, stats, withoutExtra)
+    if (not link or link == "" or not tooltipData) then
         return 0, 0
     end
     if (not string.match(link, "item:%d+:")) then
@@ -111,19 +104,15 @@ function lib:GetItemInfoViaTooltip(link, stats)
     if (not self:HasLocalCached(link)) then
         return 1, 0
     end
-    tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    tooltip:SetHyperlink(link)
     local text, level
-    for i = 2, 5 do
-        if (_G[tooltip:GetName().."TextLeft" .. i]) then
-            text = _G[tooltip:GetName().."TextLeft" .. i]:GetText() or ""
-            level = string.match(text, ItemLevelPattern)
-            if (level) then break end
-            level = string.match(text, ItemLevelPlusPat)
-            if (level) then break end
-        end
+    for _, lineData in ipairs(tooltipData.lines) do
+        text = lineData.leftText or ""
+        level = string.match(text, ItemLevelPattern)
+        if (level) then break end
+        level = string.match(text, ItemLevelPlusPat)
+        if (level) then break end
     end
-    self:GetStatsViaTooltip(tooltip, stats)
+    self:GetStatsViaTooltip(tooltipData, stats)
     if (level and string.find(level, "+")) then else
         level = tonumber(level) or 0
     end
@@ -134,20 +123,25 @@ function lib:GetItemInfoViaTooltip(link, stats)
     end
 end
 
+--獲取物品實際等級信息
+function lib:GetItemInfo(link, stats, withoutExtra)
+    local tooltipData = C_TooltipInfo.GetHyperlink(link, nil, nil, true)
+    return self:GetItemInfoViaTooltip(link, tooltipData, stats, withoutExtra)
+end
+
 --獲取容器裏物品裝備等級
 function lib:GetContainerItemLevel(pid, id)
     if (pid < 0) then
-        local link = GetContainerItemLink(pid, id)
+        local link = C_Container.GetContainerItemLink(pid, id)
         return self:GetItemInfo(link)
     end
     local text, level
     if (pid and id) then
-        tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-        tooltip:SetBagItem(pid, id)
-        for i = 2, 5 do
-            if (_G[tooltip:GetName().."TextLeft" .. i]) then
-                text = _G[tooltip:GetName().."TextLeft" .. i]:GetText() or ""
-                level = string.match(text, ItemLevelPattern)
+        local tooltipData = C_TooltipInfo.GetBagItem(pid, id)
+        if (tooltipData) then
+            for _, lineData in ipairs(tooltipData.lines) do
+                text = lineData.leftText or ""
+                level = text and string.match(text, ItemLevelPattern)
                 if (level) then break end
             end
         end
@@ -158,30 +152,26 @@ end
 --獲取UNIT物品實際等級信息
 function lib:GetUnitItemInfo(unit, index, stats)
     if (not UnitExists(unit)) then return 1, -1 end  --C_PaperDollInfo.GetInspectItemLevel
-    unittip:SetOwner(UIParent, "ANCHOR_NONE")
-    unittip:SetInventoryItem(unit, index)
     local link = GetInventoryItemLink(unit, index)
-    if (not link or link == "") then
+    local tooltipData = C_TooltipInfo.GetInventoryItem(unit, index)
+    if (not link or link == "" or not tooltipData) then
         return 0, 0
     end
     if (not self:HasLocalCached(link)) then
         return 1, 0
     end
     local text, level
-    for i = 2, 5 do
-        if (_G[unittip:GetName().."TextLeft" .. i]) then
-            text = _G[unittip:GetName().."TextLeft" .. i]:GetText() or ""
-            level = string.match(text, ItemLevelPattern)
-            if (level) then break end
-        end
+    for _, lineData in ipairs(tooltipData.lines) do
+        text = lineData.leftText or ""
+        level = text and string.match(text, ItemLevelPattern)
+        if (level) then break end
     end
-    self:GetStatsViaTooltip(unittip, stats)
+    self:GetStatsViaTooltip(tooltipData, stats)
     if (string.match(link, "item:(%d+):")) then
         return 0, tonumber(level) or 0, C_Item.GetItemInfo(link)
     else
-        local line = _G[unittip:GetName().."TextLeft1"]
-        local r, g, b = line:GetTextColor()
-        local name = ("|cff%.2x%.2x%.2x%s|r"):format((r or 1)*255, (g or 1)*255, (b or 1)*255, line:GetText() or "")
+        local lineData = tooltipData.lines[1]
+        local name = lineData.leftText and lineData.leftColor:WrapTextInColorCode(lineData.leftText) or ""
         return 0, tonumber(level) or 0, name
     end
 end
