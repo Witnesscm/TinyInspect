@@ -250,7 +250,7 @@ end)
 
 -- Bag & Bank
 local function SetContainerItemLevel(self)
-    local category = self:IsBankBag() and "Bank" or "Bag"
+    local category = self.IsBankBag and self:IsBankBag() and "Bank" or "Bag" -- TODO: 11.2.0
     for _, button in self:EnumerateValidItems() do
         SetItemLevel(button, C_Container.GetContainerItemLink(button:GetBagID(), button:GetID()), category)
     end
@@ -267,7 +267,7 @@ if ContainerFrameCombinedBags then
     hooksecurefunc(ContainerFrameCombinedBags, "UpdateItems", SetContainerItemLevel)
 end
 
--- Bank
+-- Bank -- TODO: 11.2.0
 if BankFrameItemButton_Update then
     hooksecurefunc("BankFrameItemButton_Update", function(self)
         if self.isBag then return end
@@ -275,7 +275,7 @@ if BankFrameItemButton_Update then
     end)
 end
 
--- Warband Bank
+-- Warband Bank -- TODO: 11.2.0
 if BankPanelItemButtonMixin then
     hooksecurefunc(BankPanelItemButtonMixin, "Refresh", function(self)
         SetItemLevel(self, self.itemInfo and self.itemInfo.hyperlink, "Bank")
