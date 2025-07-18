@@ -16,7 +16,6 @@ local ItemLevelPlusPat = gsub(ITEM_LEVEL_PLUS, "%%d%+", "(%%d+%%+)")
 
 --Toolip
 local tooltip = CreateFrame("GameTooltip", "LibItemLevelTooltip1", UIParent, "GameTooltipTemplate")
-local unittip = CreateFrame("GameTooltip", "LibItemLevelTooltip2", UIParent, "GameTooltipTemplate")
 
 --物品是否已經本地化
 function lib:HasLocalCached(item)
@@ -106,10 +105,10 @@ function lib:GetItemInfoViaTooltip(link, tooltipData, stats, withoutExtra)
     end
     local text, level
     for _, lineData in ipairs(tooltipData.lines) do
-        text = lineData.leftText or ""
-        level = string.match(text, ItemLevelPattern)
+        text = lineData.leftText
+        level = text and string.match(text, ItemLevelPattern)
         if (level) then break end
-        level = string.match(text, ItemLevelPlusPat)
+        level = text and string.match(text, ItemLevelPlusPat)
         if (level) then break end
     end
     self:GetStatsViaTooltip(tooltipData, stats)
@@ -140,7 +139,7 @@ function lib:GetContainerItemLevel(pid, id)
         local tooltipData = C_TooltipInfo.GetBagItem(pid, id)
         if (tooltipData) then
             for _, lineData in ipairs(tooltipData.lines) do
-                text = lineData.leftText or ""
+                text = lineData.leftText
                 level = text and string.match(text, ItemLevelPattern)
                 if (level) then break end
             end
@@ -162,7 +161,7 @@ function lib:GetUnitItemInfo(unit, index, stats)
     end
     local text, level
     for _, lineData in ipairs(tooltipData.lines) do
-        text = lineData.leftText or ""
+        text = lineData.leftText
         level = text and string.match(text, ItemLevelPattern)
         if (level) then break end
     end
