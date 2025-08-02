@@ -158,7 +158,7 @@ end
 --讀取並顯示圖標
 local function ShowGemAndEnchant(frame, ItemLink, anchorFrame, itemframe)
     if (not ItemLink) then return 0 end
-    local num, info, qty = LibItemGem:GetItemGemInfo(ItemLink)
+    local num, info = LibItemGem:GetItemGemInfo(ItemLink)
     local icon
     for i, v in ipairs(info) do
         icon = GetIconFrame(frame)
@@ -225,8 +225,8 @@ local function ShowGemAndEnchant(frame, ItemLink, anchorFrame, itemframe)
         icon:Show()
         anchorFrame = icon
     elseif (not enchantID and EnchantParts[itemframe.index] and EnchantParts[itemframe.index][1]) then
-        local classID = select(12, C_Item.GetItemInfo(ItemLink))
-        if not (qty == 6 and (itemframe.index==2 or itemframe.index==16 or itemframe.index==17)) and ((itemframe.index ~= INVSLOT_OFFHAND) or (classID == Enum.ItemClass.Weapon)) then
+        local quality, _, _, _, _, _, _, _, _, classID = select(3, C_Item.GetItemInfo(ItemLink))
+        if not (quality == 6 and (itemframe.index == 2 or itemframe.index == 16 or itemframe.index == 17)) and ((itemframe.index ~= INVSLOT_OFFHAND) or (classID == Enum.ItemClass.Weapon)) then
             num = num + 1
             icon = GetIconFrame(frame)
             icon.title = ENCHANTS .. ": " .. (_G[EnchantParts[itemframe.index][2]] or EnchantParts[itemframe.index][2])
