@@ -70,7 +70,7 @@ local SendAddonMessage = C_ChatInfo and C_ChatInfo.SendAddonMessage or function(
 --发送自己的信息
 local function SendPlayerInfo()
     local ilvl = select(2, GetAverageItemLevel())
-    local spec = select(2, GetSpecializationInfo(GetSpecialization()))
+    local spec = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()))
     SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "PARTY")
 end
 
@@ -115,7 +115,7 @@ LibEvent:attachEvent("GROUP_ROSTER_UPDATE", function(self)
             ilevel = select(2, GetAverageItemLevel()),
             done   = true,
             unit   = "player",
-            spec   = select(2, GetSpecializationInfo(GetSpecialization())),
+            spec   = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())),
         }
         SendPlayerInfo()
         LibSchedule:AddTask({
@@ -199,13 +199,13 @@ local function SendItemLevel(members)
     if (TinyInspectDB and TinyInspectDB.ShowPartySpecialization) then
         num, pattern = 30, "%s %.1f %s %s"
     end
-    SendChatMessage(string.rep("-", num), channel)
+    C_ChatInfo.SendChatMessage(string.rep("-", num), channel)
     for _, v in pairs(members) do
         if (v.done or v.slevel or v.ilevel > 0) then
-            SendChatMessage(format(pattern, label, v.slevel or v.ilevel, v.name, v.spec and "("..v.spec..")" or ""), channel)
+            C_ChatInfo.SendChatMessage(format(pattern, label, v.slevel or v.ilevel, v.name, v.spec and "("..v.spec..")" or ""), channel)
         end
     end
-    SendChatMessage(string.rep("-", num), channel)
+    C_ChatInfo.SendChatMessage(string.rep("-", num), channel)
 end
 
 --讀取完或超時后執行

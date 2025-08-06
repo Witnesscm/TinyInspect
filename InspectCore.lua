@@ -66,8 +66,8 @@ end
 function GetInspectSpec(unit)
     local specID, specName
     if (unit == "player") then
-        specID = GetSpecialization()
-        specName = select(2, GetSpecializationInfo(specID))
+        specID = C_SpecializationInfo.GetSpecialization()
+        specName = select(2, C_SpecializationInfo.GetSpecializationInfo(specID))
     else
         specID = GetInspectSpecialization(unit)
         if (specID and specID > 0) then
