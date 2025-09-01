@@ -11,6 +11,7 @@ ns.L = {
     ShowItemSlotString          = "显示物品部位文字",
     ShowInspectAngularBorder    = "观察面板直角边框",
     ShowInspectColoredLabel     = "观察面板高亮橙装武器标签",
+    ShowInspectTierSets         = "观察面板显示套装数量",
     ShowCharacterItemSheet      = "显示玩家自己装备列表",
     ShowInspectItemSheet        = "显示观察对象装备列表",
     ShowOwnFrameWhenInspecting  = "观察同时显示自己装备列表",

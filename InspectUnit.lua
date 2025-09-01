@@ -9,6 +9,85 @@ local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
 --bliz func
 local IsCorruptedItem = C_Item.IsCorruptedItem or function(link) return false end
 
+-- Credit: NDui
+local formatSets = {
+    [1] = " |cff14b200(1/4)", -- green
+    [2] = " |cff0091f2(2/4)", -- blue
+    [3] = " |cff0091f2(3/4)", -- blue
+    [4] = " |cffc745f9(4/4)", -- purple
+    [5] = " |cffc745f9(5/5)", -- purple
+}
+
+local TierSetsInvType = {
+    [Enum.InventoryType.IndexHeadType] = true,
+    [Enum.InventoryType.IndexShoulderType] = true,
+    [Enum.InventoryType.IndexChestType] = true,
+    [Enum.InventoryType.IndexLegsType] = true,
+    [Enum.InventoryType.IndexHandType] = true
+}
+
+local function SortItemSets(set1, set2)
+    if set1.itemLevel ~= set2.itemLevel then
+        return set1.itemLevel > set2.itemLevel
+    end
+    return set1.setID > set2.setID
+end
+
+local function IsTierSetItems(items)
+    if #items ~= 5 then
+        return false
+    end
+
+    local found = {}
+    for _, item in ipairs(items) do
+        local invType = item.invType - 1
+        if invType == Enum.InventoryType.IndexRobeType then
+            invType = Enum.InventoryType.IndexChestType
+        end
+
+        if not TierSetsInvType[invType] or found[invType] then
+            return false
+        end
+
+        found[invType] = true
+    end
+
+    return true
+end
+
+local function BuildTierSets()
+    wipe(TinyInspectDB.TierSets)
+
+    for classID = 1, GetNumClasses() do
+        local itemSets = C_LootJournal.GetItemSets(classID, 0)
+        if not itemSets then break end
+
+        table.sort(itemSets, SortItemSets)
+        for _, itemSet in ipairs(itemSets) do
+            local items = C_LootJournal.GetItemSetItems(itemSet.setID)
+            if items and IsTierSetItems(items) then
+                TinyInspectDB.TierSets[itemSet.setID] = true
+                break
+            end
+        end
+    end
+end
+
+LibEvent:attachEvent("PLAYER_LOGIN", function()
+    TinyInspectDB.TierSets = TinyInspectDB.TierSets or {}
+
+    local seasonID = C_SeasonInfo.GetCurrentDisplaySeasonID()
+    if not TinyInspectDB.seasonID or TinyInspectDB.seasonID ~= seasonID then
+        TinyInspectDB.seasonID = seasonID
+        wipe(TinyInspectDB.TierSets)
+    end
+
+    if not next(TinyInspectDB.TierSets) then
+        BuildTierSets()
+        LibEvent:attachEvent("LOOT_JOURNAL_ITEM_UPDATE", BuildTierSets)
+    end
+end)
+
 --裝備清單
 local slots = {
     { index = 1, name = HEADSLOT, },
@@ -167,6 +246,7 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
     if (maxLevel) then
         formats = "%" .. string.len(floor(maxLevel)) .. "s"
     end
+    local sets = 0
     for i, v in ipairs(slots) do
         _, level, name, link, quality, _, _, _, _, _, equipLoc, _, _, classID, _, _, _, setID = LibItemInfo:GetUnitItemInfo(unit, v.index)
         itemframe = frame["item"..i]
@@ -178,6 +258,9 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         itemframe.classID = classID
         itemframe.setID = setID
         itemframe.itemString:SetWidth(0)
+        if (TinyInspectDB.TierSets[setID]) then
+            sets = sets + 1
+        end
         if (level > 0) then
             itemframe.levelString:SetText(format(formats,level))
             itemframe.itemString:SetText(link or name)
@@ -208,6 +291,9 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
             oframe:SetAlpha(1)
         end
         LibEvent:trigger("INSPECT_ITEMFRAME_UPDATED", itemframe)
+    end
+    if (TinyInspectDB and TinyInspectDB.ShowInspectTierSets and sets > 0) then
+        frame.level:SetText(frame.level:GetText()..formatSets[sets])
     end
     if (mframe and oframe and (mframe.quality == 6 or oframe.quality == 6)) then
         level = max(mframe.level, oframe.level)

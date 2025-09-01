@@ -36,6 +36,7 @@ local DefaultDB = {
         EnableItemLevelOther = true,
     ShowInspectAngularBorder = false,     --觀察面板直角邊框
     ShowInspectColoredLabel = true,       --觀察面板高亮橙裝武器標簽
+    ShowInspectTierSets = true,           --觀察面板顯示套裝數量
     ShowCharacterItemSheet = true,        --顯示玩家自己裝備列表
     ShowInspectItemSheet = true,          --顯示观察对象装备列表 --20190318Added
         ShowOwnFrameWhenInspecting = false,   --觀察同時顯示自己裝備列表
@@ -102,6 +103,7 @@ local options = {
     },
     { key = "ShowInspectAngularBorder" },
     { key = "ShowInspectColoredLabel" },
+    { key = "ShowInspectTierSets" },
     { key = "ShowCharacterItemSheet" },
     { key = "ShowInspectItemSheet",
         child = {
