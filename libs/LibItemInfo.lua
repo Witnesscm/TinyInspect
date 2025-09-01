@@ -14,9 +14,6 @@ local locale = GetLocale()
 local ItemLevelPattern = gsub(ITEM_LEVEL, "%%d", "(%%d+)")
 local ItemLevelPlusPat = gsub(ITEM_LEVEL_PLUS, "%%d%+", "(%%d+%%+)")
 
---Toolip
-local tooltip = CreateFrame("GameTooltip", "LibItemLevelTooltip1", UIParent, "GameTooltipTemplate")
-
 --物品是否已經本地化
 function lib:HasLocalCached(item)
     if (not item or item == "" or item == "0") then return true end
@@ -201,11 +198,4 @@ function lib:GetUnitItemLevel(unit, stats)
     end
     maxlevel = max(maxlevel, mlevel, olevel)
     return counts, total/max(16-counts,1), total, max(mlevel,olevel), (mquality == 6 or oquality == 6), maxlevel
-end
-
---獲取任务物品實際link
-function lib:GetQuestItemlink(questType, id)
-    tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    tooltip:SetQuestLogItem(questType, id)
-    return select(2, tooltip:GetItem()) or GetQuestLogItemLink(questType, id)
 end

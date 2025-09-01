@@ -218,11 +218,7 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
             SetItemLevel(self)
         --QuestInfo
         elseif (self.type and self.objectType == "item") then
-            if (QuestInfoFrame and QuestInfoFrame.questLog) then
-                link = LibItemInfo:GetQuestItemlink(self.type, self:GetID())
-            else
-                link = GetQuestItemLink(self.type, self:GetID())
-            end
+            link = GetQuestItemLink(self.type, self:GetID())
             if (not link) then
                 link = select(2, C_Item.GetItemInfo(itemIDOrLink))
             end
