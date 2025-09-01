@@ -76,7 +76,7 @@ local DefaultDB = {
 local options = {
     --{ key = "ShowItemBorder" },
     { key = "ShowGemAndEnchant",
-        subcheck = DefaultDB.EnchantParts,
+        -- subcheck = DefaultDB.EnchantParts,
     },
     { key = "EnableItemLevel",
       child = {

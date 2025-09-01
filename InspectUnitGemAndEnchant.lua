@@ -56,6 +56,31 @@ local function GetItemAddableSockets(link, slot, itemLevel)
     return items
 end
 
+local INVSLOT_ENCHANT = {
+    [INVSLOT_CHEST] = true,
+    [INVSLOT_LEGS] = true,
+    [INVSLOT_FEET] = true,
+    [INVSLOT_WRIST] = true,
+    [INVSLOT_FINGER1] = true,
+    [INVSLOT_FINGER2] = true,
+    [INVSLOT_BACK] = true,
+    [INVSLOT_MAINHAND] = true,
+    [INVSLOT_OFFHAND] = true,
+}
+
+local function CheckEnchantmentSlot(slotID, quality, classID)
+    if INVSLOT_ENCHANT[slotID] then
+        if quality == Enum.ItemQuality.Artifact and (slotID == INVSLOT_NECK or slotID == INVSLOT_MAINHAND or slotID == INVSLOT_OFFHAND) then
+            return false
+        end
+        if slotID == INVSLOT_OFFHAND and classID ~= Enum.ItemClass.Weapon then
+            return false
+        end
+        return true
+    end
+    return false
+end
+
 --創建圖標框架
 local function CreateIconFrame(frame, index)
     local icon = CreateFrame("Button", nil, frame)
@@ -196,7 +221,6 @@ local function ShowGemAndEnchant(frame, ItemLink, anchorFrame, itemframe)
     end
     local enchantItemID, enchantID = LibItemEnchant:GetEnchantItemID(ItemLink)
     local enchantSpellID = LibItemEnchant:GetEnchantSpellID(ItemLink)
-    local EnchantParts = TinyInspectDB.EnchantParts or {}
     if (enchantItemID) then
         num = num + 1
         icon = GetIconFrame(frame)
@@ -224,19 +248,16 @@ local function ShowGemAndEnchant(frame, ItemLink, anchorFrame, itemframe)
         icon:SetPoint("LEFT", anchorFrame, "RIGHT", num == 1 and 6 or 1, 0)
         icon:Show()
         anchorFrame = icon
-    elseif (not enchantID and EnchantParts[itemframe.index] and EnchantParts[itemframe.index][1]) then
-        local quality, _, _, _, _, _, _, _, _, classID = select(3, C_Item.GetItemInfo(ItemLink))
-        if not (quality == 6 and (itemframe.index == 2 or itemframe.index == 16 or itemframe.index == 17)) and ((itemframe.index ~= INVSLOT_OFFHAND) or (classID == Enum.ItemClass.Weapon)) then
-            num = num + 1
-            icon = GetIconFrame(frame)
-            icon.title = ENCHANTS .. ": " .. (_G[EnchantParts[itemframe.index][2]] or EnchantParts[itemframe.index][2])
-            icon.bg:SetVertexColor(1, 0.2, 0.2, 0.6)
-            icon.texture:SetTexture("Interface\\Cursor\\Quest") --QuestRepeatable
-            icon:ClearAllPoints()
-            icon:SetPoint("LEFT", anchorFrame, "RIGHT", num == 1 and 6 or 1, 0)
-            icon:Show()
-            anchorFrame = icon
-        end
+    elseif (not enchantID and CheckEnchantmentSlot(itemframe.index, itemframe.quality, itemframe.classID)) then
+        num = num + 1
+        icon = GetIconFrame(frame)
+        icon.title = ENCHANTS..": "..itemframe.slot
+        icon.bg:SetVertexColor(1, 0.2, 0.2, 0.6)
+        icon.texture:SetTexture("Interface\\Cursor\\Quest")     --QuestRepeatable
+        icon:ClearAllPoints()
+        icon:SetPoint("LEFT", anchorFrame, "RIGHT", num == 1 and 6 or 1, 0)
+        icon:Show()
+        anchorFrame = icon
     end
     return num * 18
 end

@@ -75,6 +75,7 @@ local function GetInspectItemListFrame(parent)
             itemframe = CreateFrame("Button", nil, frame, "BackdropTemplate")
             itemframe:SetSize(120, min((height-82)/#slots,28))
             itemframe.index = v.index
+            itemframe.slot = v.name
             itemframe.backdrop = backdrop
             if (i == 1) then
                 itemframe:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -70)
@@ -159,7 +160,7 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
     frame.title:SetTextColor(color.r, color.g, color.b)
     frame.level:SetText(format(ItemLevelPattern, ilevel))
     frame.level:SetTextColor(1, 0.82, 0)
-    local _, name, level, link, quality
+    local _, name, level, link, quality, equipLoc, classID, setID
     local itemframe, mframe, oframe, itemwidth
     local width = 160
     local formats = "%3s"
@@ -167,12 +168,15 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         formats = "%" .. string.len(floor(maxLevel)) .. "s"
     end
     for i, v in ipairs(slots) do
-        _, level, name, link, quality = LibItemInfo:GetUnitItemInfo(unit, v.index)
+        _, level, name, link, quality, _, _, _, _, _, equipLoc, _, _, classID, _, _, _, setID = LibItemInfo:GetUnitItemInfo(unit, v.index)
         itemframe = frame["item"..i]
         itemframe.name = name
         itemframe.link = link
         itemframe.level = level
         itemframe.quality = quality
+        itemframe.equipLoc = equipLoc
+        itemframe.classID = classID
+        itemframe.setID = setID
         itemframe.itemString:SetWidth(0)
         if (level > 0) then
             itemframe.levelString:SetText(format(formats,level))
