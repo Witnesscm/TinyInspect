@@ -1,0 +1,4 @@
+package-as: TinyInspect
+
+ignore:
+  - scripts
