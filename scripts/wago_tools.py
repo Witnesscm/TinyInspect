@@ -9,7 +9,7 @@ from urllib3.util.retry import Retry
 class WagoClient:
     def __init__(self, product: str = "wow", retries: int = 3):
         self.product = product
-        self._build_cache = {}
+        self._version = None
 
         self.session = requests.Session()
         retry_cfg = Retry(
@@ -19,8 +19,9 @@ class WagoClient:
         )
         self.session.mount("https://", HTTPAdapter(max_retries=retry_cfg))
 
-    def fetch_version(self) -> str:
-        if self.product not in self._build_cache:
+    @property
+    def version(self) -> str:
+        if self._version is None:
             url = f"https://wago.tools/api/builds/{self.product}/latest"
             try:
                 resp = self.session.get(url)
@@ -28,13 +29,12 @@ class WagoClient:
             except requests.RequestException as e:
                 raise RuntimeError(f"获取版本信息失败: {url} -> {e}")
 
-            self._build_cache[self.product] = resp.json()["version"]
+            self._version = resp.json()["version"]
 
-        return self._build_cache[self.product]
+        return self._version
 
     def fetch_csv(self, name: str, locale: str = "enUS"):
-        version = self.fetch_version()
-        params = {"build": version, "locale": locale}
+        params = {"build": self.version, "locale": locale}
         url = f"https://wago.tools/db2/{name}/csv"
 
         try:
