@@ -248,7 +248,7 @@ local function ShowGemAndEnchant(frame, ItemLink, anchorFrame, itemframe)
         icon:SetPoint("LEFT", anchorFrame, "RIGHT", num == 1 and 6 or 1, 0)
         icon:Show()
         anchorFrame = icon
-    elseif (not enchantID and CheckEnchantmentSlot(itemframe.index, itemframe.quality, itemframe.classID) and not PlayerIsTimerunning()) then
+    elseif (not enchantID and CheckEnchantmentSlot(itemframe.index, itemframe.quality, itemframe.classID)) then
         num = num + 1
         icon = GetIconFrame(frame)
         icon.title = ENCHANTS..": "..itemframe.slot
@@ -264,6 +264,7 @@ end
 
 --功能附着
 hooksecurefunc("ShowInspectItemListFrame", function(unit, parent, itemLevel, maxLevel)
+    if PlayerIsTimerunning() then return end
     local frame = parent.inspectFrame
     if (not frame) then return end
     if (TinyInspectDB and TinyInspectDB.ShowGemAndEnchant) then
