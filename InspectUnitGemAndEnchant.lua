@@ -57,13 +57,15 @@ local function GetItemAddableSockets(link, slot, itemLevel)
 end
 
 local INVSLOT_ENCHANT = {
+    [INVSLOT_HEAD] = ns.IsMidnight,
+    [INVSLOT_SHOULDER] = ns.IsMidnight,
     [INVSLOT_CHEST] = true,
     [INVSLOT_LEGS] = true,
     [INVSLOT_FEET] = true,
-    [INVSLOT_WRIST] = true,
+    [INVSLOT_WRIST] = not ns.IsMidnight,
     [INVSLOT_FINGER1] = true,
     [INVSLOT_FINGER2] = true,
-    [INVSLOT_BACK] = true,
+    [INVSLOT_BACK] = not ns.IsMidnight,
     [INVSLOT_MAINHAND] = true,
     [INVSLOT_OFFHAND] = true,
 }
