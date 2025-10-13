@@ -9,6 +9,8 @@ local VERSION = 2.7
 
 local addon, ns = ...
 
+ns.IsMidnight = select(4, GetBuildInfo()) >= 120000
+
 local L = ns.L or {}
 
 setmetatable(L, { __index = function(_, k)

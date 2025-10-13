@@ -9,11 +9,10 @@ local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
 local frame = CreateFrame("Frame", nil, UIParent)
-
+frame:Hide()
 frame.schedules, frame.timer = {}, 0
 
 frame:SetScript("OnUpdate", function(self, elasped)
-    if (self.paused) then return end
     local t = GetTime()
     local item
     for i = #self.schedules, 1, -1 do
@@ -34,7 +33,7 @@ frame:SetScript("OnUpdate", function(self, elasped)
         end
     end
     if (#self.schedules == 0) then
-        self.paused = true
+        self:Hide()
     end
 end)
 
@@ -70,7 +69,7 @@ function lib:AddTask(item, override)
     setmetatable(item, {__index = metatable})
     item.onStart(item)
     tinsert(frame.schedules, item)
-    frame.paused = false
+    frame:Show()
     return self
 end
 
@@ -116,5 +115,5 @@ function lib:SearchTask(identity, useLike)
             tinsert(identities, v.identity)
         end
     end
-    return #identities==0 and nil or identities
+    return next(identities) and identities or nil
 end
