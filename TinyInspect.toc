@@ -1,4 +1,4 @@
-## Interface: 110200, 110107
+## Interface: 120000, 110207, 110205
 ## Title: TinyInspect
 ## Version: @project-version@
 ## Notes: Show ItemLevel For Inspect & Party & Raid & Mouse & Bag & Bank ...
