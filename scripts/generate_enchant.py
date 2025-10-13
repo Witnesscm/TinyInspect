@@ -88,12 +88,16 @@ def main():
         if spell_id and spell_id not in spell_enchant_data[enchant_id]:
             spell_enchant_data[enchant_id].append(spell_id)
 
-    # Item ID -> Item Crafting Quality
+    # Crafting Quality ID -> Quality Tier
+    crafting_quality_csv = client.fetch_csv("CraftingQuality")
+    quality_map = {int(r["ID"]): int(r["QualityTier"]) for r in crafting_quality_csv}
+
+    # Item ID -> Quality Tier
     item_csv = client.fetch_csv("Item")
     item_crafting_quality = {
-        int(r["ID"]): int(r["CraftingQualityID"])
+        int(r["ID"]): quality_map[qid]
         for r in item_csv
-        if int(r["CraftingQualityID"]) > 0
+        if (qid := int(r["CraftingQualityID"])) > 0 and qid in quality_map
     }
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -111,7 +115,7 @@ def main():
                 comment_prefix = "" if idx == 0 else "-- "
                 f.write(
                     f"    {comment_prefix}[{key}] = {item_id}, "
-                    f"-- {item_name[item_id]}{quality_text}\n"
+                    f"-- {item_name.get(item_id, 'Unknown')}{quality_text}\n"
                 )
         f.write("}\n\n")
 
@@ -121,7 +125,7 @@ def main():
                 comment_prefix = "" if idx == 0 else "-- "
                 f.write(
                     f"    {comment_prefix}[{key}] = {spell_id}, "
-                    f"-- {spell_name[spell_id]}\n"
+                    f"-- {spell_name.get(spell_id, 'Unknown')}\n"
                 )
         f.write("}\n")
 
