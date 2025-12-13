@@ -55,32 +55,11 @@ local DefaultDB = {
     ItemLevelAnchorPoint = "TOP",         --裝等位置
     ShowPluginGreenState = false,         --裝備綠字屬性前綴顯示
     ShowGemAndEnchant = true,             --显示宝石和附魔
-        EnchantParts = {                  --附魔部位
-            {false, "HEADSLOT", },
-            {false, "NECKSLOT", },
-            {false, "SHOULDERSLOT", },
-            false,
-            {true, "CHESTSLOT", },
-            {false, "WAISTSLOT", },
-            {true, "LEGSSLOT", },
-            {true, "FEETSLOT", },
-            {true, "WRISTSLOT", },
-            {false, "HANDSSLOT", },
-            {true, "FINGER0SLOT", },
-            {true, "FINGER1SLOT", },
-            {false, "TRINKET0SLOT", },
-            {false, "TRINKET1SLOT", },
-            {true, "BACKSLOT", },
-            {true, "MAINHANDSLOT", },
-            {true, "SECONDARYHANDSLOT", },
-        },
 }
 
 local options = {
     --{ key = "ShowItemBorder" },
-    { key = "ShowGemAndEnchant",
-        -- subcheck = DefaultDB.EnchantParts,
-    },
+    { key = "ShowGemAndEnchant" },
     { key = "EnableItemLevel",
       child = {
         { key = "ShowColoredItemLevelString" },
@@ -136,7 +115,7 @@ if (GetLocale():sub(1,2) == "zh") then
     tinsert(options, { key = "ShowPluginGreenState" })
 end
 
-TinyInspectDB = DefaultDB
+TinyInspectDB = {}
 
 local function CallCustomFunc(self)
     local checked = self:GetChecked()
@@ -166,15 +145,7 @@ end
 
 local function OnClickCheckbox(self)
     local status = self:GetChecked()
-    if (strfind(self.key, "EnchantParts|")) then
-        local _, key = strsplit("|", self.key)
-        key = tonumber(key)
-        if (TinyInspectDB.EnchantParts[key]) then
-            TinyInspectDB.EnchantParts[key][1] = status
-        end
-    else
-        TinyInspectDB[self.key] = status
-    end
+    TinyInspectDB[self.key] = status
     StatusSubCheckbox(self, status)
     CallCustomFunc(self)
 end
@@ -208,42 +179,6 @@ local function CreateSubtypeFrame(list, parent, xpos, ypos)
         checkbox.Text:SetText(L[v.key])
         checkbox:SetScript("OnClick", OnClickCheckbox)
         checkbox:SetPoint("TOPLEFT", parent.SubtypeFrame, "TOPLEFT", 16, -46-(i-1)*30)
-    end
-    parent.SubtypeFrame:SetSize(168, #list*30+58)
-end
-
-local function CreateSubcheckFrame(list, parent, xpos, ypos)
-    if (not list) then return end
-    if (not parent.SubtypeFrame) then
-        parent.SubtypeFrame = CreateFrame("Frame", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-        parent.SubtypeFrame:SetScale(0.92)
-        parent.SubtypeFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", xpos or 300, ypos or 22)
-        parent.SubtypeFrame:SetBackdrop({
-            bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile     = true,
-            tileSize = 8,
-            edgeSize = 16,
-            insets   = {left = 4, right = 4, top = 4, bottom = 4}
-        })
-        parent.SubtypeFrame:SetBackdropColor(0, 0, 0, 0.6)
-        parent.SubtypeFrame:SetBackdropBorderColor(0.6, 0.6, 0.6)
-        parent.SubtypeFrame.title = parent.SubtypeFrame:CreateFontString(nil, "BORDER", "GameFontNormalOutline")
-        parent.SubtypeFrame.title:SetPoint("TOPLEFT", 16, -18)
-        parent.SubtypeFrame.title:SetText(L[parent.key])
-    end
-    local checkbox, j
-    for i, v in ipairs(list) do
-      if (i <= 3) then j = i else j = i-1 end
-      if (v) then
-        checkbox = CreateFrame("CheckButton", nil, parent.SubtypeFrame, "InterfaceOptionsCheckButtonTemplate")
-        checkbox.key = "EnchantParts|" .. i 
-        checkbox.checkedFunc = v.checkedFunc
-        checkbox.uncheckedFunc = v.uncheckedFunc
-        checkbox.Text:SetText(_G[v[2]] or v[2])
-        checkbox:SetScript("OnClick", OnClickCheckbox)
-        checkbox:SetPoint("TOPLEFT", parent.SubtypeFrame, "TOPLEFT", 16, -46-(j-1)*30)
-      end
     end
     parent.SubtypeFrame:SetSize(168, #list*30+58)
 end
@@ -309,7 +244,6 @@ local function CreateCheckbox(list, parent, anchor, offsetx, offsety)
         offsety = CreateCheckbox(v.child, checkbox, anchor, offsetx+stepx, offsety)
         CreateSubtypeFrame(v.subtype, checkbox, v.subtype and v.subtype.xpos, v.subtype and v.subtype.ypos)
         CreateAnchorFrame(v.anchorkey, checkbox)
-        CreateSubcheckFrame(v.subcheck, checkbox, v.subcheck and v.subcheck.xpos, v.subcheck and v.subcheck.ypos)
     end
     return offsety
 end
@@ -319,16 +253,7 @@ local function InitCheckbox(parent)
     for i = 1, parent:GetNumChildren() do
         checkbox = select(i, parent:GetChildren())
         if (checkbox.key) then
-            local key
-            if (strfind(checkbox.key, "EnchantParts|")) then
-                key = select(2, strsplit("|", checkbox.key))
-                key = tonumber(key)
-                if (TinyInspectDB.EnchantParts[key]) then
-                    checkbox:SetChecked(TinyInspectDB.EnchantParts[key][1])
-                end
-            else
-                checkbox:SetChecked(TinyInspectDB[checkbox.key])
-            end
+            checkbox:SetChecked(TinyInspectDB[checkbox.key])
             StatusSubCheckbox(checkbox, checkbox:GetChecked())
             CallCustomFunc(checkbox)
             InitCheckbox(checkbox)
@@ -336,6 +261,32 @@ local function InitCheckbox(parent)
     end
     if (parent.SubtypeFrame) then
         InitCheckbox(parent.SubtypeFrame)
+    end
+end
+
+local function InitSettings(source, target, fullClean)
+    for i, j in pairs(source) do
+        if type(j) == "table" then
+            if target[i] == nil or type(target[i]) ~= "table" then target[i] = {} end
+            for k, v in pairs(j) do
+                if target[i][k] == nil then
+                    target[i][k] = v
+                end
+            end
+        else
+            if target[i] == nil then target[i] = j end
+        end
+    end
+
+    for i, j in pairs(target) do
+        if source[i] == nil then target[i] = nil end
+        if fullClean and type(j) == "table" then
+            for k, v in pairs(j) do
+                if type(v) ~= "table" and source[i] and source[i][k] == nil then
+                    target[i][k] = nil
+                end
+            end
+        end
     end
 end
 
@@ -347,18 +298,11 @@ CreateCheckbox(options, frame, frame.title, 18, 9)
 local category = Settings.RegisterCanvasLayoutCategory(frame, addon)
 Settings.RegisterAddOnCategory(category)
 
-LibEvent:attachEvent("VARIABLES_LOADED", function()
-    if (not TinyInspectDB or not TinyInspectDB.version) then
-        TinyInspectDB = DefaultDB
-    elseif (TinyInspectDB.version <= DefaultDB.version) then
-        TinyInspectDB.version = DefaultDB.version
-        for k, v in pairs(DefaultDB) do
-            if (TinyInspectDB[k] == nil) then
-                TinyInspectDB[k] = v
-            end
-        end
+LibEvent:attachEvent("ADDON_LOADED", function(self, addonName)
+    if (addonName == addon) then
+        InitSettings(DefaultDB, TinyInspectDB, true)
+        InitCheckbox(frame)
     end
-    InitCheckbox(frame)
 end)
 
 SLASH_TinyInspect1 = "/tinyinspect"
