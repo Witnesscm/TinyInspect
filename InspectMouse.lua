@@ -10,6 +10,7 @@ local function FindLine(tooltip, keyword)
     local line, text
     for i = 2, tooltip:NumLines() do
         line = _G[tooltip:GetName() .. "TextLeft" .. i]
+        if (not line) then break end
         text = line:GetText() or ""
         if (string.find(text, keyword)) then
             return line, i, _G[tooltip:GetName() .. "TextRight" .. i]
