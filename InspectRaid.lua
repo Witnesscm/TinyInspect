@@ -376,9 +376,17 @@ frame.panel.rescanButton:SetScript("OnClick", function(self)
 end)
 
 --團友變更或觀察到數據時更新顯示
-LibEvent:attachTrigger("RAID_MEMBER_CHANGED, RAID_INSPECT_READY", function(self)
+local function UpdateList()
     MakeMembersList()
     SortAndShowMembersList()
+end
+
+LibEvent:attachTrigger("RAID_MEMBER_CHANGED, RAID_INSPECT_READY", function(self)
+    LibSchedule:AddTask({
+        identity  = "InspectRaidUpdateList",
+        elasped   = 0.2,
+        onTimeout = UpdateList,
+    })
 end)
 
 --高亮正在讀取的人員
