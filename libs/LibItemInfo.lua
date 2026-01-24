@@ -20,8 +20,8 @@ function lib:HasLocalCached(item)
     if (tonumber(item)) then
         return select(10, C_Item.GetItemInfo(tonumber(item)))
     else
-        local id, gem1, gem2, gem3 = string.match(item, "item:(%d+):[^:]*:(%d-):(%d-):(%d-):")
-        return self:HasLocalCached(id) and self:HasLocalCached(gem1) and self:HasLocalCached(gem2) and self:HasLocalCached(gem3)
+        local id = string.match(item, "item:(%d+):")
+        return self:HasLocalCached(id)
     end
 end
 
