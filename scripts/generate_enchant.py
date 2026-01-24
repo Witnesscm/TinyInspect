@@ -110,22 +110,28 @@ def main():
         f.write("local EnchantItemDB = {\n")
         for key in sorted(item_enchant_data.keys()):
             for idx, item_id in enumerate(item_enchant_data[key]):
+                if item_id not in item_name:
+                    continue
+
                 quality = item_crafting_quality.get(item_id)
                 quality_text = f" ({quality}星)" if quality else ""
                 comment_prefix = "" if idx == 0 else "-- "
                 f.write(
                     f"    {comment_prefix}[{key}] = {item_id}, "
-                    f"-- {item_name.get(item_id, 'Unknown')}{quality_text}\n"
+                    f"-- {item_name[item_id]}{quality_text}\n"
                 )
         f.write("}\n\n")
 
         f.write("local EnchantSpellDB = {\n")
         for key in sorted(spell_enchant_data.keys()):
             for idx, spell_id in enumerate(spell_enchant_data[key]):
+                if spell_id not in spell_name:
+                    continue
+
                 comment_prefix = "" if idx == 0 else "-- "
                 f.write(
                     f"    {comment_prefix}[{key}] = {spell_id}, "
-                    f"-- {spell_name.get(spell_id, 'Unknown')}\n"
+                    f"-- {spell_name[spell_id]}\n"
                 )
         f.write("}\n")
 
