@@ -18,7 +18,7 @@ local formatSets = {
     [5] = " |cffc745f9(5/5)", -- purple
 }
 
-local TierSetsInvType = {
+local TierSetInvType = {
     [Enum.InventoryType.IndexHeadType] = true,
     [Enum.InventoryType.IndexShoulderType] = true,
     [Enum.InventoryType.IndexChestType] = true,
@@ -45,7 +45,7 @@ local function IsTierSetItems(items)
             invType = Enum.InventoryType.IndexChestType
         end
 
-        if not TierSetsInvType[invType] or found[invType] then
+        if not TierSetInvType[invType] or found[invType] then
             return false
         end
 
@@ -55,8 +55,8 @@ local function IsTierSetItems(items)
     return true
 end
 
-local function BuildTierSets()
-    wipe(TinyInspectDB.TierSets)
+local function BuildTierSetTable()
+    wipe(TinyInspectDB.TierSetTable)
 
     for classID = 1, GetNumClasses() do
         local itemSets = C_LootJournal.GetItemSets(classID, 0)
@@ -66,25 +66,47 @@ local function BuildTierSets()
         for _, itemSet in ipairs(itemSets) do
             local items = C_LootJournal.GetItemSetItems(itemSet.setID)
             if items and IsTierSetItems(items) then
-                TinyInspectDB.TierSets[itemSet.setID] = true
+                TinyInspectDB.TierSetTable[itemSet.setID] = true
                 break
             end
         end
     end
 end
 
-LibEvent:attachEvent("PLAYER_LOGIN", function()
-    TinyInspectDB.TierSets = TinyInspectDB.TierSets or {}
+-- 12.0 pre-patch fix
+local SeasonTierSetTable = {
+    [30] = {
+        [1919] = true,
+        [1920] = true,
+        [1921] = true,
+        [1922] = true,
+        [1923] = true,
+        [1924] = true,
+        [1925] = true,
+        [1926] = true,
+        [1927] = true,
+        [1928] = true,
+        [1929] = true,
+        [1930] = true,
+        [1931] = true
+    }
+}
 
+LibEvent:attachEvent("PLAYER_LOGIN", function()
     local seasonID = C_SeasonInfo.GetCurrentDisplaySeasonID()
     if not TinyInspectDB.seasonID or TinyInspectDB.seasonID ~= seasonID then
         TinyInspectDB.seasonID = seasonID
-        wipe(TinyInspectDB.TierSets)
+        wipe(TinyInspectDB.TierSetTable)
     end
 
-    if not next(TinyInspectDB.TierSets) then
-        BuildTierSets()
-        LibEvent:attachEvent("LOOT_JOURNAL_ITEM_UPDATE", BuildTierSets)
+    if not next(TinyInspectDB.TierSetTable) then
+        local currentTierSetTable = SeasonTierSetTable[seasonID]
+        if currentTierSetTable then
+            TinyInspectDB.TierSetTable = CopyTable(currentTierSetTable)
+        else
+            BuildTierSetTable()
+            LibEvent:attachEvent("LOOT_JOURNAL_ITEM_UPDATE", BuildTierSetTable)
+        end
     end
 end)
 
@@ -258,7 +280,7 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         itemframe.classID = classID
         itemframe.setID = setID
         itemframe.itemString:SetWidth(0)
-        if (TinyInspectDB.TierSets[setID]) then
+        if (TinyInspectDB.TierSetTable[setID]) then
             sets = sets + 1
         end
         if (level > 0) then
@@ -292,7 +314,7 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         end
         LibEvent:trigger("INSPECT_ITEMFRAME_UPDATED", itemframe)
     end
-    if (TinyInspectDB and TinyInspectDB.ShowInspectTierSets and sets > 0) then
+    if (TinyInspectDB and TinyInspectDB.ShowInspectTierSet and sets > 0) then
         frame.level:SetText(frame.level:GetText()..formatSets[sets])
     end
     if (mframe and oframe and (mframe.quality == 6 or oframe.quality == 6)) then

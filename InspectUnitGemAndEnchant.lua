@@ -39,7 +39,7 @@ local function GetItemAddableSockets(link, slot, itemLevel)
         return
     end
 
-    if itemLevel < 584 then
+    if itemLevel < 86 or itemLevel > 170 then
         return
     end
 
