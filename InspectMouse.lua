@@ -18,6 +18,20 @@ local function FindLineInTooltipData(tooltipData, keyword)
     end
 end
 
+-- 直接在 GameTooltip 中查找行（包含 AddDoubleLine 添加的行）
+local function FindLineInGameTooltip(keyword)
+    local tooltipName = GameTooltip:GetName()
+    for i = 1, GameTooltip:NumLines() do
+        local leftLine = _G[tooltipName .. "TextLeft" .. i]
+        if leftLine then
+            local text = leftLine:GetText()
+            if text and string.find(text, keyword, 1, true) then
+                return i
+            end
+        end
+    end
+end
+
 local LevelLabel = STAT_AVERAGE_ITEM_LEVEL .. ": "
 
 local function AppendToGameTooltip(guid, ilevel, spec, weaponLevel, tooltipData)
@@ -33,7 +47,13 @@ local function AppendToGameTooltip(guid, ilevel, spec, weaponLevel, tooltipData)
         ilvlText = ilvlText .. format(" (%s)", weaponLevel)
     end
     
-    local lineIndex = tooltipData and FindLineInTooltipData(tooltipData, LevelLabel)
+    -- 优先直接检查 GameTooltip（包含 AddDoubleLine 添加的行）
+    local lineIndex = FindLineInGameTooltip(LevelLabel)
+    -- 如果找不到，再检查 tooltipData（用于 ProcessInfo 场景）
+    if not lineIndex and tooltipData then
+        lineIndex = FindLineInTooltipData(tooltipData, LevelLabel)
+    end
+    
     if lineIndex then
         local leftLine = _G[GameTooltip:GetName() .. "TextLeft" .. lineIndex]
         local rightLine = _G[GameTooltip:GetName() .. "TextRight" .. lineIndex]
@@ -80,7 +100,7 @@ end
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
     if TinyInspectDB and not TinyInspectDB.EnableMouseItemLevel then return end
     if data.guid == UnitGUID("mouseover") then
-        local tooltipData = C_TooltipInfo.GetUnit("mouseover")
-        AppendToGameTooltip(data.guid, floor(data.ilevel), data.spec, data.weaponLevel, tooltipData)
+        -- 不传入 tooltipData，让函数直接检查 GameTooltip 以避免重复行
+        AppendToGameTooltip(data.guid, floor(data.ilevel), data.spec, data.weaponLevel, nil)
     end
 end)
