@@ -4,8 +4,6 @@
 -------------------------------------
 local addon, ns = ...
 
-if ns.IsMidnight then return end
-
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 
 local function FindLine(tooltip, keyword)

@@ -82,11 +82,7 @@ function ShowInspectItemStatsFrame(frame, unit)
     local _, playerItemLevel  = LibItemInfo:GetUnitItemLevel("player", playerStats)
     local baseInfo = {}
     table.insert(baseInfo, {label = LEVEL, iv = UnitLevel(unit), pv = UnitLevel("player") })
-    if ns.IsMidnight then
-        table.insert(baseInfo, { label = HEALTH, iv = UnitHealthMax(unit), pv = UnitHealthMax("player") })
-    else
-        table.insert(baseInfo, {label = HEALTH, iv = AbbreviateLargeNumbers(UnitHealthMax(unit)), pv = AbbreviateLargeNumbers(UnitHealthMax("player")) })
-    end
+    table.insert(baseInfo, {label = HEALTH, iv = AbbreviateLargeNumbers(UnitHealthMax(unit)), pv = AbbreviateLargeNumbers(UnitHealthMax("player")) })
     table.insert(baseInfo, {label = STAT_AVERAGE_ITEM_LEVEL, iv = format("%.1f",inspectItemLevel), pv = format("%.1f",playerItemLevel) })
     local index = 1
     local stat
