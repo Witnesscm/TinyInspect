@@ -286,11 +286,11 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         if (level > 0) then
             itemframe.levelString:SetText(format(formats,level))
             itemframe.itemString:SetText(link or name)
-            itemframe:SetAlpha(1)
         else
             itemframe.levelString:SetText(format(formats,""))
             itemframe.itemString:SetText("")
         end
+        itemframe:SetAlpha(1)
         if (link and IsCorruptedItem(link)) then
             itemframe.levelString:SetTextColor(0.5, 0.5, 1)
         else
@@ -308,10 +308,8 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         end
         if (v.index == 16) then
             mframe = itemframe
-            mframe:SetAlpha(1)
         elseif (v.index == 17) then
             oframe = itemframe
-            oframe:SetAlpha(1)
         end
         LibEvent:trigger("INSPECT_ITEMFRAME_UPDATED", itemframe)
     end
