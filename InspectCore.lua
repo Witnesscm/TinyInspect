@@ -118,9 +118,9 @@ LibEvent:attachEvent("INSPECT_READY", function(this, guid)
     LibSchedule:AddTask({
         identity  = guid,
         timer     = 0.1,
-        elasped   = 0.4,
+        elasped   = 0,
         expired   = GetTime() + 5,
-        repeats   = 2,  --重复次数 10.x里GetInventoryItemLink居然有概率返回nil,所以这里扫两次
+        repeats   = 1,
         data      = guids[guid],
         onTimeout = function(self) inspecting = false end,
         onExecute = function(self)
