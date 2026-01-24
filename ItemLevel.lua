@@ -283,15 +283,13 @@ if (EquipmentFlyout_DisplayButton) then
     hooksecurefunc("EquipmentFlyout_DisplayButton", function(button)
         local location = button.location
         if (not location) then return end
-        local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location)
-        if (not player and not bank and not bags and not voidStorage) then return end
-        if (voidStorage) then
-            SetItemLevel(button, nil, "AltEquipment")
-        elseif (bags) then
-            local link = C_Container.GetContainerItemLink(bag, slot)
+        local locationData = EquipmentManager_GetLocationData(location)
+        if (not locationData.isPlayer and not locationData.isBank and not locationData.isBags) then return end
+        if (locationData.isBags) then
+            local link = C_Container.GetContainerItemLink(locationData.bag, locationData.slot)
             SetItemLevel(button, link, "AltEquipment")
         else
-            local link = GetInventoryItemLink("player", slot)
+            local link = GetInventoryItemLink("player", locationData.slot)
             SetItemLevel(button, link, "AltEquipment")
         end
     end)
