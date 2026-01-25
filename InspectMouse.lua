@@ -39,7 +39,9 @@ local function AppendToGameTooltip(guid, ilevel, spec, weaponLevel, tooltipData)
     if TinyInspectDB and not TinyInspectDB.EnableMouseSpecialization then spec = "" end
     
     local _, unit = GameTooltip:GetUnit()
-    if not unit or UnitGUID(unit) ~= guid then return end
+    if not unit then return end
+    local unitGuid = SafeUnitAPI.GUID(unit)
+    if not unitGuid or unitGuid ~= guid then return end
     
     local ilvlText = format("%s|cffffffff%s|r", LevelLabel, ilevel)
     local specText = format("|cffb8b8b8%s|r", spec)
@@ -75,12 +77,16 @@ if GameTooltip.ProcessInfo then
         if TinyInspectDB and (TinyInspectDB.EnableMouseItemLevel or TinyInspectDB.EnableMouseSpecialization) then
             local _, unit = self:GetUnit()
             if not unit then return end
-            local hp = UnitHealthMax(unit)
-            local data = GetInspectInfo(unit)
-            if data and data.hp == hp and data.ilevel > 0 then
+            
+            -- 只处理玩家单位，跳过 NPC/怪物
+            if not SafeUnitAPI.IsPlayer(unit) then return end
+            
+            local hp = SafeUnitAPI.HealthMax(unit)
+            local data = GetInspectInfo(unit, nil, hp)
+            if data and (not hp or data.hp == hp) and data.ilevel > 0 then
                 return AppendToGameTooltip(tooltipData.guid, floor(data.ilevel), data.spec, data.weaponLevel, tooltipData)
             end
-            if not CanInspect(unit) or not UnitIsVisible(unit) then return end
+            if not SafeUnitAPI.CanInspect(unit) or not SafeUnitAPI.IsVisible(unit) then return end
             local inspecting = GetInspecting()
             if inspecting then
                 if inspecting.guid ~= tooltipData.guid then
@@ -90,7 +96,7 @@ if GameTooltip.ProcessInfo then
                 end
             end
             ClearInspectPlayer()
-            NotifyInspect(unit)
+            SafeUnitAPI.NotifyInspect(unit)
             AppendToGameTooltip(tooltipData.guid, "...", nil, nil, tooltipData)
         end
     end)
@@ -99,7 +105,8 @@ end
 -- @see InspectCore.lua
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
     if TinyInspectDB and not TinyInspectDB.EnableMouseItemLevel then return end
-    if data.guid == UnitGUID("mouseover") then
+    local mouseoverGuid = SafeUnitAPI.GUID("mouseover")
+    if mouseoverGuid and data.guid == mouseoverGuid then
         -- 不传入 tooltipData，让函数直接检查 GameTooltip 以避免重复行
         AppendToGameTooltip(data.guid, floor(data.ilevel), data.spec, data.weaponLevel, nil)
     end

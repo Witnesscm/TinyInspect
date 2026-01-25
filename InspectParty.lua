@@ -26,7 +26,7 @@ local function GetMembers(num)
     local temp = {}
     for i = 1, num do
         unit = "party"..i
-        guid = UnitGUID(unit)
+        guid = SafeUnitAPI.GUID(unit)
         if (guid) then temp[guid] = unit end
     end
     for guid, v in pairs(members) do
@@ -38,16 +38,16 @@ local function GetMembers(num)
         if (members[guid]) then
             members[guid].done = false
             members[guid].unit = unit
-            members[guid].class = select(2, UnitClass(unit))
+            members[guid].class = SafeUnitAPI.Class(unit)
         else
             members[guid] = {
                 done   = false,
                 unit   = unit,
-                class  = select(2, UnitClass(unit)),
+                class  = SafeUnitAPI.Class(unit),
                 ilevel = -1,
             }
         end
-        members[guid].name, members[guid].realm = UnitName(unit)
+        members[guid].name, members[guid].realm = SafeUnitAPI.Name(unit)
         if (not members[guid].realm) then
             members[guid].realm = GetRealmName()
         end
@@ -58,9 +58,9 @@ end
 local function SendInspect()
     if (GetInspecting()) then return end
     for guid, v in pairs(members) do
-        if ((not v.done or v.ilevel <= 0) and UnitIsConnected(v.unit) and CanInspect(v.unit)) then
+        if ((not v.done or v.ilevel <= 0) and UnitIsConnected(v.unit) and SafeUnitAPI.CanInspect(v.unit)) then
             ClearInspectPlayer()
-            NotifyInspect(v.unit)
+            SafeUnitAPI.NotifyInspect(v.unit)
             LibEvent:trigger("PARTY_INSPECT_STARTED", v)
             return v
         end
@@ -111,14 +111,18 @@ LibEvent:attachEvent("GROUP_ROSTER_UPDATE", function(self)
     local numCurrent = GetNumSubgroupMembers()
     if (numCurrent > numMembers) then
         GetMembers(numCurrent)
-        members[UnitGUID("player")] = {
-            name   = UnitName("player"),
-            class  = select(2, UnitClass("player")),
-            ilevel = select(2, GetAverageItemLevel()),
-            done   = true,
-            unit   = "player",
-            spec   = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())),
-        }
+        local playerGuid = SafeUnitAPI.GUID("player")
+        if playerGuid then
+            local playerName = SafeUnitAPI.Name("player")
+            members[playerGuid] = {
+                name   = playerName,
+                class  = SafeUnitAPI.Class("player"),
+                ilevel = select(2, GetAverageItemLevel()),
+                done   = true,
+                unit   = "player",
+                spec   = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())),
+            }
+        end
         SendPlayerInfo()
         LibSchedule:AddTask({
             override  = true,
@@ -183,7 +187,8 @@ end
 local lastBroadcastTimer = 0
 local function filter(self, event, msg, name, ...)
     if (string.find(msg, label)) then
-        local uname = UnitName("player") .. "-" .. GetRealmName()
+        local playerName = SafeUnitAPI.Name("player")
+        local uname = (playerName or "") .. "-" .. GetRealmName()
         if (name ~= uname) then
             lastBroadcastTimer = GetTime()
         end
