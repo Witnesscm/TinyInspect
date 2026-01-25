@@ -24,7 +24,7 @@ local function GetMembers(num)
     local temp = {}
     for i = 1, num do
         unit = "raid"..i
-        guid = UnitGUID(unit)
+        guid = SafeUnitAPI.GUID(unit)
         if (guid) then temp[guid] = unit end
     end
     for guid, v in pairs(members) do
@@ -35,7 +35,7 @@ local function GetMembers(num)
     for guid, unit in pairs(temp) do
         if (members[guid]) then
             members[guid].unit = unit
-            members[guid].class = select(2, UnitClass(unit))
+            members[guid].class = SafeUnitAPI.Class(unit)
             members[guid].role  = UnitGroupRolesAssigned(unit)
             members[guid].done  = GetInspectInfo(unit, 0, true)
         else
@@ -43,12 +43,12 @@ local function GetMembers(num)
                 done   = false,
                 guid   = guid,
                 unit   = unit,
-                class  = select(2, UnitClass(unit)),
+                class  = SafeUnitAPI.Class(unit),
                 role   = UnitGroupRolesAssigned(unit),
                 ilevel = -1,
             }
         end
-        members[guid].name, members[guid].realm = UnitName(unit)
+        members[guid].name, members[guid].realm = SafeUnitAPI.Name(unit)
         if (not members[guid].realm) then
             members[guid].realm = GetRealmName()
         end
@@ -59,16 +59,19 @@ end
 --觀察 @trigger RAID_INSPECT_STARTED
 local function SendInspect(unit)
     if (GetInspecting()) then return end
-    if (unit and UnitIsVisible(unit) and CanInspect(unit)) then
+    if (unit and SafeUnitAPI.IsVisible(unit) and SafeUnitAPI.CanInspect(unit)) then
         ClearInspectPlayer()
-        NotifyInspect(unit)
-        LibEvent:trigger("RAID_INSPECT_STARTED", members[UnitGUID(unit)])
+        SafeUnitAPI.NotifyInspect(unit)
+        local guid = SafeUnitAPI.GUID(unit)
+        if guid and members[guid] then
+            LibEvent:trigger("RAID_INSPECT_STARTED", members[guid])
+        end
         return
     end
     for guid, v in pairs(members) do
-        if ((not v.done or v.ilevel <= 0) and UnitIsVisible(v.unit) and CanInspect(v.unit)) then
+        if ((not v.done or v.ilevel <= 0) and SafeUnitAPI.IsVisible(v.unit) and SafeUnitAPI.CanInspect(v.unit)) then
             ClearInspectPlayer()
-            NotifyInspect(v.unit)
+            SafeUnitAPI.NotifyInspect(v.unit)
             LibEvent:trigger("RAID_INSPECT_STARTED", v)
             return v
         end

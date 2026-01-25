@@ -290,6 +290,7 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
             itemframe.levelString:SetText(format(formats,""))
             itemframe.itemString:SetText("")
         end
+        itemframe:SetAlpha(1)
         if (link and IsCorruptedItem(link)) then
             itemframe.levelString:SetTextColor(0.5, 0.5, 1)
         else
@@ -307,10 +308,8 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         end
         if (v.index == 16) then
             mframe = itemframe
-            mframe:SetAlpha(1)
         elseif (v.index == 17) then
             oframe = itemframe
-            oframe:SetAlpha(1)
         end
         LibEvent:trigger("INSPECT_ITEMFRAME_UPDATED", itemframe)
     end
@@ -443,3 +442,66 @@ LibEvent:attachEvent("PLAYER_EQUIPMENT_CHANGED", function(self)
         ShowInspectItemListFrame("player", PaperDollFrame, ilevel, maxLevel)
     end
 end)
+
+-- 立即显示加载中状态的框架
+local function ShowInspectItemListFrameLoading(unit, parent)
+    if (not parent:IsShown()) then return end
+    if (TinyInspectDB and not TinyInspectDB.ShowInspectItemSheet) then return end
+    
+    local frame = GetInspectItemListFrame(parent)
+    local class = select(2, UnitClass(unit))
+    local color = RAID_CLASS_COLORS[class] or NORMAL_FONT_COLOR
+    frame.unit = unit
+    frame.portrait:SetLevel(UnitLevel(unit))
+    frame.portrait.PortraitRingQuality:SetVertexColor(color.r, color.g, color.b)
+    frame.portrait.LevelBorder:SetVertexColor(color.r, color.g, color.b)
+    SetPortraitTexture(frame.portrait.Portrait, unit)
+    frame.title:SetText(UnitName(unit))
+    frame.title:SetTextColor(color.r, color.g, color.b)
+    frame.level:SetText("...")
+    frame.level:SetTextColor(1, 0.82, 0)
+    
+    -- 清空所有槽位，显示加载中
+    for i, v in ipairs(slots) do
+        local itemframe = frame["item"..i]
+        itemframe.name = nil
+        itemframe.link = nil
+        itemframe.level = 0
+        itemframe.quality = nil
+        itemframe.levelString:SetText("")
+        itemframe.itemString:SetText("|cff808080...|r")
+        itemframe.itemString:SetWidth(0)
+        itemframe:SetWidth(120)
+        itemframe:SetAlpha(0.6)
+    end
+    
+    frame:SetWidth(160)
+    frame:Show()
+    frame:SetBackdrop(frame.backdrop)
+    frame:SetBackdropColor(0, 0, 0, 0.9)
+    frame:SetBackdropBorderColor(color.r, color.g, color.b)
+    
+    return frame
+end
+
+-- Hook InspectFrame 的 OnShow 事件，优先使用缓存，否则显示加载中
+LibEvent:attachEvent("ADDON_LOADED", function(self, addonName)
+    if (addonName == "Blizzard_InspectUI") then
+        InspectFrame:HookScript("OnShow", function(self)
+            if (not self.unit) then return end
+            if (TinyInspectDB and not TinyInspectDB.ShowInspectItemSheet) then return end
+            
+            -- 检查缓存
+            local cachedData = GetInspectInfo(self.unit)
+            if (cachedData and cachedData.ilevel and cachedData.ilevel > 0) then
+                -- 有缓存，直接显示完整数据
+                local frame = ShowInspectItemListFrame(self.unit, self, cachedData.ilevel, cachedData.maxLevel)
+                LibEvent:trigger("INSPECT_FRAME_COMPARE", frame)
+            else
+                -- 没有缓存，显示加载中状态
+                ShowInspectItemListFrameLoading(self.unit, self)
+            end
+        end)
+    end
+end)
+
