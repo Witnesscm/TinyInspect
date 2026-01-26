@@ -72,6 +72,7 @@ if GameTooltip.ProcessInfo then
     hooksecurefunc(GameTooltip, "ProcessInfo", function(self, info)
         if not info or not info.tooltipData then return end
         local tooltipData = info.tooltipData
+        if issecretvalue(tooltipData.type) then return end
         if tooltipData.type ~= 2 then return end
 
         if TinyInspectDB and (TinyInspectDB.EnableMouseItemLevel or TinyInspectDB.EnableMouseSpecialization) then
