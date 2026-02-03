@@ -10,9 +10,11 @@ local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 
 -- 使用 tooltipData.lines 查找文本
 local function FindLineInTooltipData(tooltipData, keyword)
-    if not tooltipData or not tooltipData.lines then return end
-    for i, lineData in ipairs(tooltipData.lines) do
-        if lineData.leftText and string.find(lineData.leftText, keyword) then
+    local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
+    if not lines then return end
+    for i, lineData in ipairs(lines) do
+        local text = SafeUnitAPI.TooltipLineText(lineData)
+        if text and SafeUnitAPI.StringFind(text, keyword) then
             return i
         end
     end
@@ -24,8 +26,8 @@ local function FindLineInGameTooltip(keyword)
     for i = 1, GameTooltip:NumLines() do
         local leftLine = _G[tooltipName .. "TextLeft" .. i]
         if leftLine then
-            local text = leftLine:GetText()
-            if text and string.find(text, keyword, 1, true) then
+            local text = SafeUnitAPI.GetText(leftLine)
+            if text and SafeUnitAPI.StringFind(text, keyword, 1, true) then
                 return i
             end
         end
@@ -72,8 +74,7 @@ if GameTooltip.ProcessInfo then
     hooksecurefunc(GameTooltip, "ProcessInfo", function(self, info)
         if not info or not info.tooltipData then return end
         local tooltipData = info.tooltipData
-        if issecretvalue(tooltipData.type) then return end
-        if tooltipData.type ~= 2 then return end
+        if not SafeUnitAPI.TooltipDataType(tooltipData, 2) then return end
 
         if TinyInspectDB and (TinyInspectDB.EnableMouseItemLevel or TinyInspectDB.EnableMouseSpecialization) then
             local _, unit = self:GetUnit()
@@ -84,21 +85,22 @@ if GameTooltip.ProcessInfo then
             
             local hp = SafeUnitAPI.HealthMax(unit)
             local data = GetInspectInfo(unit, nil, hp)
+            local tooltipGuid = SafeUnitAPI.TooltipDataGUID(tooltipData) or ""
             if data and (not hp or data.hp == hp) and data.ilevel > 0 then
-                return AppendToGameTooltip(tooltipData.guid, floor(data.ilevel), data.spec, data.weaponLevel, tooltipData)
+                return AppendToGameTooltip(tooltipGuid, floor(data.ilevel), data.spec, data.weaponLevel, tooltipData)
             end
             if not SafeUnitAPI.CanInspect(unit) or not SafeUnitAPI.IsVisible(unit) then return end
             local inspecting = GetInspecting()
             if inspecting then
-                if inspecting.guid ~= tooltipData.guid then
-                    return AppendToGameTooltip(tooltipData.guid, "n/a", nil, nil, tooltipData)
+                if inspecting.guid ~= tooltipGuid then
+                    return AppendToGameTooltip(tooltipGuid, "n/a", nil, nil, tooltipData)
                 else
-                    return AppendToGameTooltip(tooltipData.guid, "......", nil, nil, tooltipData)
+                    return AppendToGameTooltip(tooltipGuid, "......", nil, nil, tooltipData)
                 end
             end
             ClearInspectPlayer()
             SafeUnitAPI.NotifyInspect(unit)
-            AppendToGameTooltip(tooltipData.guid, "...", nil, nil, tooltipData)
+            AppendToGameTooltip(tooltipGuid, "...", nil, nil, tooltipData)
         end
     end)
 end

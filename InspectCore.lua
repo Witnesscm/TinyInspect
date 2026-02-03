@@ -82,6 +82,66 @@ function SafeUnitAPI.NotifyInspect(unit)
     return success
 end
 
+-- 安全获取 tooltipData 字段
+-- 先 pcall 获取，再检查是否是受保护值
+function SafeUnitAPI.TooltipDataField(tooltipData, field)
+    if not tooltipData then return nil end
+    local value, success = nil, false
+    success = pcall(function() value = tooltipData[field] end)
+    if not success then return nil end
+    -- issecretvalue 不会报错，可以安全检查
+    if issecretvalue and issecretvalue(value) then return nil end
+    return value
+end
+
+-- 安全比较 tooltipData.type
+function SafeUnitAPI.TooltipDataType(tooltipData, expectedType)
+    if not tooltipData then return false end
+    local typeValue = SafeUnitAPI.TooltipDataField(tooltipData, "type")
+    if not typeValue then return false end
+    return typeValue == expectedType
+end
+
+-- 安全获取 tooltipData.guid
+function SafeUnitAPI.TooltipDataGUID(tooltipData)
+    return SafeUnitAPI.TooltipDataField(tooltipData, "guid")
+end
+
+-- 安全获取 tooltipData.lines
+function SafeUnitAPI.TooltipDataLines(tooltipData)
+    return SafeUnitAPI.TooltipDataField(tooltipData, "lines")
+end
+
+-- 安全获取文本（用于 FontString:GetText() 等）
+function SafeUnitAPI.GetText(fontString)
+    if not fontString then return nil end
+    local text, success = nil, false
+    success = pcall(function() text = fontString:GetText() end)
+    if not success then return nil end
+    -- issecretvalue 不会报错，可以安全检查
+    if issecretvalue and issecretvalue(text) then return nil end
+    return text
+end
+
+-- 安全进行字符串查找
+function SafeUnitAPI.StringFind(text, pattern, init, plain)
+    if not text then return nil end
+    local result, success = nil, false
+    success = pcall(function() result = string.find(text, pattern, init, plain) end)
+    return success and result or nil
+end
+
+-- 安全获取 tooltipData lineData 的 leftText
+function SafeUnitAPI.TooltipLineText(lineData)
+    if not lineData then return nil end
+    local text, success = nil, false
+    success = pcall(function() text = lineData.leftText end)
+    if not success then return nil end
+    -- issecretvalue 不会报错，可以安全检查
+    if issecretvalue and issecretvalue(text) then return nil end
+    return text
+end
+
 -- 导出为全局，方便其他文件使用
 _G.SafeUnitAPI = SafeUnitAPI
 

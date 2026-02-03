@@ -28,8 +28,10 @@ end
 --獲取TIP中的屬性信息 (zhTW|zhCN|enUS)
 function lib:GetStatsViaTooltip(tooltipData, stats)
     if (type(stats) == "table") then
+        local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
+        if not lines then return stats end
         local text, r, g, b
-        for _, lineData in ipairs(tooltipData.lines) do
+        for _, lineData in ipairs(lines) do
             text = lineData.leftText or ""
             r, g, b = lineData.leftColor:GetRGB()
             for statValue, statName in string.gmatch(text, "%+([0-9,]+)([^%+%|]+)") do
@@ -60,8 +62,10 @@ end
 if (locale == "koKR") then
     function lib:GetStatsViaTooltip(tooltipData, stats)
         if (type(stats) == "table") then
+            local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
+            if not lines then return stats end
             local text, r, g, b
-            for _, lineData in ipairs(tooltipData.lines) do
+            for _, lineData in ipairs(lines) do
                 text = lineData.leftText or ""
                 r, g, b = lineData.leftColor:GetRGB()
                 for statName, statValue in string.gmatch(text, "([^%+]+)%+([0-9,]+)") do
@@ -100,8 +104,10 @@ function lib:GetItemInfoViaTooltip(link, tooltipData, stats, withoutExtra)
     if (not self:HasLocalCached(link)) then
         return 1, 0
     end
+    local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
+    if not lines then return 0, 0 end
     local text, level
-    for _, lineData in ipairs(tooltipData.lines) do
+    for _, lineData in ipairs(lines) do
         text = lineData.leftText
         level = text and string.match(text, ItemLevelPattern)
         if (level) then break end
@@ -135,10 +141,13 @@ function lib:GetContainerItemLevel(pid, id)
     if (pid and id) then
         local tooltipData = C_TooltipInfo.GetBagItem(pid, id)
         if (tooltipData) then
-            for _, lineData in ipairs(tooltipData.lines) do
-                text = lineData.leftText
-                level = text and string.match(text, ItemLevelPattern)
-                if (level) then break end
+            local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
+            if lines then
+                for _, lineData in ipairs(lines) do
+                    text = lineData.leftText
+                    level = text and string.match(text, ItemLevelPattern)
+                    if (level) then break end
+                end
             end
         end
     end
@@ -156,8 +165,10 @@ function lib:GetUnitItemInfo(unit, index, stats)
     if (not self:HasLocalCached(link)) then
         return 1, 0
     end
+    local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
+    if not lines then return 0, 0 end
     local text, level
-    for _, lineData in ipairs(tooltipData.lines) do
+    for _, lineData in ipairs(lines) do
         text = lineData.leftText
         level = text and string.match(text, ItemLevelPattern)
         if (level) then break end
@@ -166,7 +177,8 @@ function lib:GetUnitItemInfo(unit, index, stats)
     if (string.match(link, "item:(%d+):")) then
         return 0, tonumber(level) or 0, C_Item.GetItemInfo(link)
     else
-        local lineData = tooltipData.lines[1]
+        local lineData = lines[1]
+        if not lineData then return 0, tonumber(level) or 0, "" end
         local name = lineData.leftText and lineData.leftColor:WrapTextInColorCode(lineData.leftText) or ""
         return 0, tonumber(level) or 0, name
     end
