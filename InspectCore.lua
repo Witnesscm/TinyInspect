@@ -25,35 +25,54 @@ end
 -- UnitGUID: 返回 guid 或 nil
 function SafeUnitAPI.GUID(unit)
     if not unit then return nil end
-    return safeCall(function() return UnitGUID(unit) end, nil)
+    local guid, success = nil, false
+    success = pcall(function() guid = UnitGUID(unit) end)
+    if not success then return nil end
+    if issecretvalue and issecretvalue(guid) then return nil end
+    return guid
 end
 
 -- UnitHealthMax: 返回 hp 或 nil
 function SafeUnitAPI.HealthMax(unit)
     if not unit then return nil end
-    return safeCall(function() return UnitHealthMax(unit) end, nil)
+    local hp, success = nil, false
+    success = pcall(function() hp = UnitHealthMax(unit) end)
+    if not success then return nil end
+    if issecretvalue and issecretvalue(hp) then return nil end
+    return hp
 end
 
 -- UnitName: 返回 name, realm 或 nil, nil
 function SafeUnitAPI.Name(unit)
     if not unit then return nil, nil end
     local name, realm = nil, nil
-    local success = pcall(function() name, realm = UnitName(unit) end)
-    return success and name or nil, success and realm or nil
+    local success = pcall(function() 
+        name, realm = UnitName(unit) 
+    end)
+    if not success then return nil, nil end
+    if issecretvalue and issecretvalue(name) then name = nil end
+    if issecretvalue and issecretvalue(realm) then realm = nil end
+    return name, realm
 end
 
 -- UnitClass: 返回 class 或 nil
 function SafeUnitAPI.Class(unit)
     if not unit then return nil end
-    local class = nil
-    local success = pcall(function() class = select(2, UnitClass(unit)) end)
-    return success and class or nil
+    local class, success = nil, false
+    success = pcall(function() class = select(2, UnitClass(unit)) end)
+    if not success then return nil end
+    if issecretvalue and issecretvalue(class) then return nil end
+    return class
 end
 
 -- UnitLevel: 返回 level 或 nil
 function SafeUnitAPI.Level(unit)
     if not unit then return nil end
-    return safeCall(function() return UnitLevel(unit) end, nil)
+    local level, success = nil, false
+    success = pcall(function() level = UnitLevel(unit) end)
+    if not success then return nil end
+    if issecretvalue and issecretvalue(level) then return nil end
+    return level
 end
 
 -- UnitIsPlayer: 返回 true/false
