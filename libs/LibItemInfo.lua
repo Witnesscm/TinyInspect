@@ -12,26 +12,13 @@ local locale = GetLocale()
 
 --物品等級匹配規則
 local ItemLevelPattern = gsub(ITEM_LEVEL, "%%d", "(%%d+)")
-local ItemLevelPlusPat = gsub(ITEM_LEVEL_PLUS, "%%d%+", "(%%d+%%+)")
-
---物品是否已經本地化
-function lib:HasLocalCached(item)
-    if (not item or item == "" or item == "0") then return true end
-    if (tonumber(item)) then
-        return select(10, C_Item.GetItemInfo(tonumber(item)))
-    else
-        local id = string.match(item, "item:(%d+):")
-        return self:HasLocalCached(id)
-    end
-end
+local ItemLevelAltPattern = gsub(ITEM_LEVEL_ALT, "%%d(%s?)%(%%d%)", "%%d+%1%%((%%d+)%%)")
 
 --獲取TIP中的屬性信息 (zhTW|zhCN|enUS)
 function lib:GetStatsViaTooltip(tooltipData, stats)
     if (type(stats) == "table") then
-        local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
-        if not lines then return stats end
         local text, r, g, b
-        for _, lineData in ipairs(lines) do
+        for _, lineData in ipairs(tooltipData.lines) do
             text = lineData.leftText or ""
             r, g, b = lineData.leftColor:GetRGB()
             for statValue, statName in string.gmatch(text, "%+([0-9,]+)([^%+%|]+)") do
@@ -62,10 +49,8 @@ end
 if (locale == "koKR") then
     function lib:GetStatsViaTooltip(tooltipData, stats)
         if (type(stats) == "table") then
-            local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
-            if not lines then return stats end
             local text, r, g, b
-            for _, lineData in ipairs(lines) do
+            for _, lineData in ipairs(tooltipData.lines) do
                 text = lineData.leftText or ""
                 r, g, b = lineData.leftColor:GetRGB()
                 for statName, statValue in string.gmatch(text, "([^%+]+)%+([0-9,]+)") do
@@ -92,96 +77,82 @@ if (locale == "koKR") then
     end
 end
 
+function lib:GetItemLevelViaTooltip(tooltipData)
+    if not tooltipData then
+        return 0
+    end
 
---獲取物品實際等級信息通過Tooltip
-function lib:GetItemInfoViaTooltip(link, tooltipData, stats, withoutExtra)
-    if (not link or link == "" or not tooltipData) then
+    local firstLine = tooltipData.lines[1]
+    local firstText = firstLine and firstLine.leftText
+    if firstText == RETRIEVING_ITEM_INFO then
+        return -1
+    end
+
+    local itemLevel
+    for i = 2, 5 do
+        local line = tooltipData.lines[i]
+        if line then
+            local text = line.leftText
+            local match = (text and text ~= "") and (strmatch(text, ItemLevelAltPattern) or strmatch(text, ItemLevelPattern))
+            if match then
+                itemLevel = tonumber(match)
+            end
+        end
+    end
+
+    return itemLevel or 0
+end
+
+--獲取物品實際等級信息
+function lib:GetItemInfo(link, stats, withoutExtra)
+    local tooltipData = link and C_TooltipInfo.GetHyperlink(link, nil, nil, true)
+    if not tooltipData then
         return 0, 0
     end
-    if (not string.match(link, "item:%d+:")) then
-        return 1, -1
-    end
-    if (not self:HasLocalCached(link)) then
+
+    local level = self:GetItemLevelViaTooltip(tooltipData)
+    if level == -1 then
         return 1, 0
     end
-    local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
-    if not lines then return 0, 0 end
-    local text, level
-    for _, lineData in ipairs(lines) do
-        text = lineData.leftText
-        level = text and string.match(text, ItemLevelPattern)
-        if (level) then break end
-        level = text and string.match(text, ItemLevelPlusPat)
-        if (level) then break end
-    end
+
     self:GetStatsViaTooltip(tooltipData, stats)
-    if (level and string.find(level, "+")) then else
-        level = tonumber(level) or 0
-    end
-    if (withoutExtra) then
+
+    if withoutExtra then
         return 0, level
     else
         return 0, level, C_Item.GetItemInfo(link)
     end
 end
 
---獲取物品實際等級信息
-function lib:GetItemInfo(link, stats, withoutExtra)
-    local tooltipData = C_TooltipInfo.GetHyperlink(link, nil, nil, true)
-    return self:GetItemInfoViaTooltip(link, tooltipData, stats, withoutExtra)
-end
-
 --獲取容器裏物品裝備等級
 function lib:GetContainerItemLevel(pid, id)
-    if (pid < 0) then
-        local link = C_Container.GetContainerItemLink(pid, id)
-        return self:GetItemInfo(link)
+    if not pid or not id then
+        return 0
     end
-    local text, level
-    if (pid and id) then
-        local tooltipData = C_TooltipInfo.GetBagItem(pid, id)
-        if (tooltipData) then
-            local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
-            if lines then
-                for _, lineData in ipairs(lines) do
-                    text = lineData.leftText
-                    level = text and string.match(text, ItemLevelPattern)
-                    if (level) then break end
-                end
-            end
-        end
-    end
-    return 0, tonumber(level) or 0
+
+    return self:GetItemLevelViaTooltip(C_TooltipInfo.GetBagItem(pid, id))
 end
 
 --獲取UNIT物品實際等級信息
 function lib:GetUnitItemInfo(unit, index, stats)
-    if (not UnitExists(unit)) then return 1, -1 end  --C_PaperDollInfo.GetInspectItemLevel
+    if not UnitExists(unit) then
+        return 1, -1
+    end
+
     local link = GetInventoryItemLink(unit, index)
     local tooltipData = C_TooltipInfo.GetInventoryItem(unit, index)
-    if (not link or link == "" or not tooltipData) then
+    if not tooltipData then
         return 0, 0
     end
-    if (not self:HasLocalCached(link)) then
+
+    local level = self:GetItemLevelViaTooltip(tooltipData)
+    if level == -1 then
         return 1, 0
     end
-    local lines = SafeUnitAPI.TooltipDataLines(tooltipData)
-    if not lines then return 0, 0 end
-    local text, level
-    for _, lineData in ipairs(lines) do
-        text = lineData.leftText
-        level = text and string.match(text, ItemLevelPattern)
-        if (level) then break end
-    end
+
     self:GetStatsViaTooltip(tooltipData, stats)
-    if (string.match(link, "item:(%d+):")) then
-        return 0, tonumber(level) or 0, C_Item.GetItemInfo(link)
-    else
-        local lineData = lines[1]
-        if not lineData then return 0, tonumber(level) or 0, "" end
-        local name = lineData.leftText and lineData.leftColor:WrapTextInColorCode(lineData.leftText) or ""
-        return 0, tonumber(level) or 0, name
-    end
+
+    return 0, level, C_Item.GetItemInfo(link)
 end
 
 --獲取UNIT的裝備等級
