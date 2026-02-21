@@ -81,6 +81,7 @@ LibEvent:attachEvent("CHAT_MSG_ADDON", function(self, prefix, text, channel, sen
         for guid, v in pairs(members) do
             if (v.name == name and v.realm == realm) then
                 v.slevel = ilvl
+                v.spec = spec
                 v.done = true
             end
         end

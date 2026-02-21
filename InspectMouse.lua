@@ -61,7 +61,7 @@ local function OnTooltipSetUnit(self)
     if (data and data.ilevel > 0) then
         return AppendToGameTooltip(floor(data.ilevel), data.spec, data.weaponLevel)
     end
-    if (not CanInspect(unit) or not UnitIsVisible(unit)) then return end
+    if (not CanInspect(unit)) then return end
     local inspecting = GetInspecting()
     if (inspecting) then
         if (inspecting.guid ~= guid) then

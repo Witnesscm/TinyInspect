@@ -59,14 +59,14 @@ end
 --觀察 @trigger RAID_INSPECT_STARTED
 local function SendInspect(unit)
     if (GetInspecting()) then return end
-    if (unit and UnitIsVisible(unit) and CanInspect(unit)) then
+    if (unit and CanInspect(unit)) then
         ClearInspectPlayer()
         NotifyInspect(unit)
         LibEvent:trigger("RAID_INSPECT_STARTED", members[UnitGUID(unit)])
         return
     end
     for guid, v in pairs(members) do
-        if ((not v.done or v.ilevel <= 0) and UnitIsVisible(v.unit) and CanInspect(v.unit)) then
+        if ((not v.done or v.ilevel <= 0) and CanInspect(v.unit)) then
             ClearInspectPlayer()
             NotifyInspect(v.unit)
             LibEvent:trigger("RAID_INSPECT_STARTED", v)
@@ -91,6 +91,7 @@ LibEvent:attachEvent("CHAT_MSG_ADDON", function(self, prefix, text, channel, sen
         for guid, v in pairs(members) do
             if (v.name == name and v.realm == realm) then
                 v.ilevel = tonumber(ilvl) or -1
+                v.spec = spec
                 v.done = true
                 LibEvent:trigger("RAID_INSPECT_READY", v)
             end
