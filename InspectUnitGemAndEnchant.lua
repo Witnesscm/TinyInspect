@@ -57,22 +57,35 @@ local function GetItemAddableSockets(link, slot, itemLevel)
 end
 
 local INVSLOT_ENCHANT = {
-    [INVSLOT_HEAD] = ns.IsMidnight,
-    [INVSLOT_SHOULDER] = ns.IsMidnight,
-    [INVSLOT_CHEST] = true,
-    [INVSLOT_LEGS] = true,
-    [INVSLOT_FEET] = true,
-    [INVSLOT_WRIST] = not ns.IsMidnight,
-    [INVSLOT_FINGER1] = true,
-    [INVSLOT_FINGER2] = true,
-    [INVSLOT_BACK] = not ns.IsMidnight,
-    [INVSLOT_MAINHAND] = true,
-    [INVSLOT_OFFHAND] = true,
+    [INVSLOT_CHEST] = 70,
+    [INVSLOT_LEGS] = 70,
+    [INVSLOT_FEET] = 70,
+    [INVSLOT_WRIST] = 70,
+    [INVSLOT_FINGER1] = 70,
+    [INVSLOT_FINGER2] = 70,
+    [INVSLOT_BACK] = 70,
+    [INVSLOT_MAINHAND] = 70,
+    [INVSLOT_OFFHAND] = 70,
 }
 
-local function CheckEnchantmentSlot(slotID, quality, classID)
-    if INVSLOT_ENCHANT[slotID] then
-        if quality == Enum.ItemQuality.Artifact and (slotID == INVSLOT_NECK or slotID == INVSLOT_MAINHAND or slotID == INVSLOT_OFFHAND) then
+if GetServerExpansionLevel() == 11 then
+    INVSLOT_ENCHANT = {
+        [INVSLOT_HEAD] = 120,
+        [INVSLOT_SHOULDER] = 120,
+        [INVSLOT_CHEST] = 120,
+        [INVSLOT_LEGS] = 120,
+        [INVSLOT_FEET] = 120,
+        [INVSLOT_FINGER1] = 120,
+        [INVSLOT_FINGER2] = 120,
+        [INVSLOT_MAINHAND] = 120,
+        [INVSLOT_OFFHAND] = 120,
+    }
+end
+
+local function CheckEnchantmentSlot(slotID, itemLevel, classID)
+    local minLevel = INVSLOT_ENCHANT[slotID]
+    if minLevel then
+        if itemLevel < minLevel then
             return false
         end
         if slotID == INVSLOT_OFFHAND and classID ~= Enum.ItemClass.Weapon then
@@ -92,22 +105,16 @@ local function CreateIconFrame(frame, index)
     icon:SetScript("OnEnter", function(self)
         if (self.itemLink) then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            C_Timer.After(0, function()
-                GameTooltip:SetHyperlink(self.itemLink)
-                GameTooltip:Show()
-            end)
+            GameTooltip:SetHyperlink(self.itemLink)
+            GameTooltip:Show()
         elseif (self.spellID) then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            C_Timer.After(0, function()
-                GameTooltip:SetSpellByID(self.spellID)
-                GameTooltip:Show()
-            end)
+            GameTooltip:SetSpellByID(self.spellID)
+            GameTooltip:Show()
         elseif (self.title) then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            C_Timer.After(0, function()
-                GameTooltip:SetText(self.title)
-                GameTooltip:Show()
-            end)
+            GameTooltip:SetText(self.title)
+            GameTooltip:Show()
         end
     end)
     icon:SetScript("OnLeave", function(self)
@@ -185,6 +192,13 @@ local function UpdateIconTexture(type, icon, data)
                 icon.spellID = spell:GetSpellID()
             end
         )
+    elseif type == "socketItemId" then
+        local item = Item:CreateFromItemID(data)
+        item:ContinueOnItemLoad(
+            function()
+                icon.itemLink = item:GetItemLink()
+            end
+        )
     end
 end
 
@@ -215,12 +229,7 @@ local function ShowGemAndEnchant(frame, ItemLink, anchorFrame, itemframe)
             icon = GetIconFrame(frame)
             icon.bg:SetVertexColor(1, 0.82, 0, 0.5)
             icon.texture:SetTexture("Interface\\Cursor\\Quest")
-            local item = Item:CreateFromItemID(socketItemId)
-            item:ContinueOnItemLoad(
-                function()
-                    icon.itemLink = item:GetItemLink()
-                end
-            )
+            UpdateIconTexture("socketItemId", icon, socketItemId)
             icon:ClearAllPoints()
             icon:SetPoint("LEFT", anchorFrame, "RIGHT", num == 1 and 6 or 1, 0)
             icon:Show()
@@ -240,7 +249,7 @@ local function ShowGemAndEnchant(frame, ItemLink, anchorFrame, itemframe)
     elseif (enchantSpellID) then
         num = num + 1
         icon = GetIconFrame(frame)
-        icon.bg:SetVertexColor(1,0.82,0)
+        icon.bg:SetVertexColor(1, 0.82, 0)
         UpdateIconTexture("spellId", icon, enchantSpellID)
         icon:ClearAllPoints()
         icon:SetPoint("LEFT", anchorFrame, "RIGHT", num == 1 and 6 or 1, 0)
