@@ -36,6 +36,9 @@ local function GetStatFrame(frame, index)
         frame["stat"..index]:EnableMouse(false)
         frame["stat"..index]:SetWidth(197)
         frame["stat"..index]:SetPoint("TOPLEFT", 0, -17*index+13)
+        frame["stat"..index].Background:ClearAllPoints()
+        frame["stat"..index].Background:SetPoint("LEFT")
+        frame["stat"..index].Background:SetPoint("RIGHT")
         frame["stat"..index].Background:SetVertexColor(0, 0, 0)
         frame["stat"..index].Value:SetPoint("RIGHT", -64, 0)
         frame["stat"..index].Label:SetFontObject(ChatFontNormal)
@@ -82,7 +85,7 @@ function ShowInspectItemStatsFrame(frame, unit)
     local _, playerItemLevel  = LibItemInfo:GetUnitItemLevel("player", playerStats)
     local baseInfo = {}
     table.insert(baseInfo, {label = LEVEL, iv = UnitLevel(unit), pv = UnitLevel("player") })
-    table.insert(baseInfo, {label = HEALTH, iv = AbbreviateLargeNumbers(UnitHealthMax(unit)), pv = AbbreviateLargeNumbers(UnitHealthMax("player")) })
+    table.insert(baseInfo, {label = HEALTH, iv = AbbreviateNumbers(UnitHealthMax(unit)), pv = AbbreviateNumbers(UnitHealthMax("player")) })
     table.insert(baseInfo, {label = STAT_AVERAGE_ITEM_LEVEL, iv = format("%.1f",inspectItemLevel), pv = format("%.1f",playerItemLevel) })
     local index = 1
     local stat
