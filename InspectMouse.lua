@@ -2,19 +2,14 @@
 -------------------------------------
 -- 鼠标装等和天赋 Author: M
 -------------------------------------
-local addon, ns = ...
+local _, ns = ...
+local T = ns.T
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 
--- from NDui
-local function UnitExistsNonSecret(unit)
-    if C_Secrets.ShouldUnitIdentityBeSecret(unit) then return end
-    return unit and UnitExists(unit)
-end
-
 local function GetTooltipUnit(self)
     local data = self:GetTooltipData()
-    local guid = data and not issecretvalue(data.guid) and data.guid
+    local guid = data and T:NotSecretValue(data.guid) and data.guid
     local unit = guid and UnitTokenFromGUID(guid)
     return unit, guid
 end
@@ -80,7 +75,7 @@ TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, OnTooltipSetU
 --@see InspectCore.lua
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
     if (TinyInspectDB and not TinyInspectDB.EnableMouseItemLevel) then return end
-    if (UnitExistsNonSecret("mouseover") and data.guid == UnitGUID("mouseover")) then
+    if (T:UnitExists("mouseover") and data.guid == UnitGUID("mouseover")) then
         AppendToGameTooltip(floor(data.ilevel), data.spec, data.weaponLevel)
     end
 end)

@@ -10,6 +10,7 @@
 libs\lib.xml
 
 locales\locales.xml
+API.lua
 Options.lua
 
 ##ItemBorder.lua

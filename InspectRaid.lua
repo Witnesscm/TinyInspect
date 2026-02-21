@@ -2,6 +2,8 @@
 -------------------------------------
 -- 團隊装备等级 Author: M
 -------------------------------------
+local _, ns = ...
+local T = ns.T
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 local LibSchedule = LibStub:GetLibrary("LibSchedule.7000")
@@ -79,7 +81,7 @@ end
 local function SendPlayerInfo()
     local ilvl = select(2, GetAverageItemLevel())
     local spec = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()))
-    C_ChatInfo.SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "RAID")
+    T:SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "RAID")
 end
 
 --解析发送的信息

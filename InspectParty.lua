@@ -2,6 +2,8 @@
 -------------------------------------
 -- 小隊装备等级 Author: M
 -------------------------------------
+local _, ns = ...
+local T = ns.T
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 local LibSchedule = LibStub:GetLibrary("LibSchedule.7000")
@@ -69,7 +71,7 @@ end
 local function SendPlayerInfo()
     local ilvl = select(2, GetAverageItemLevel())
     local spec = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()))
-    C_ChatInfo.SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "PARTY")
+    T:SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "PARTY")
 end
 
 --解析发送的信息
@@ -198,13 +200,13 @@ local function SendItemLevel(members)
     if (TinyInspectDB and TinyInspectDB.ShowPartySpecialization) then
         num, pattern = 30, "%s %.1f %s %s"
     end
-    C_ChatInfo.SendChatMessage(string.rep("-", num), channel)
+    T:SendChatMessage(string.rep("-", num), channel)
     for _, v in pairs(members) do
         if (v.done or v.slevel or v.ilevel > 0) then
-            C_ChatInfo.SendChatMessage(format(pattern, label, v.slevel or v.ilevel, v.name, v.spec and "("..v.spec..")" or ""), channel)
+            T:SendChatMessage(format(pattern, label, v.slevel or v.ilevel, v.name, v.spec and "(" .. v.spec .. ")" or ""), channel)
         end
     end
-    C_ChatInfo.SendChatMessage(string.rep("-", num), channel)
+    T:SendChatMessage(string.rep("-", num), channel)
 end
 
 --讀取完或超時后執行
