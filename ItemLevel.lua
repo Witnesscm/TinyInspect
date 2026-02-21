@@ -7,8 +7,6 @@ local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 local LibSchedule = LibStub:GetLibrary("LibSchedule.7000")
 local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
 
-local ChatFrame_AddMessageEventFilter = ChatFrame_AddMessageEventFilter or ChatFrameUtil.AddMessageEventFilter
-
 local ARMOR = ARMOR or "Armor"
 local WEAPON = WEAPON or "Weapon"
 local MOUNTS = MOUNTS or "Mount"
@@ -20,19 +18,21 @@ if (GetLocale():sub(1,2) == "zh") then ARTIFACT_POWER = "能量" end
 local function GetItemLevelFrame(self, category)
     if (not self.ItemLevelFrame) then
         local fontAdjust = GetLocale():sub(1,2) == "zh" and 0 or -3
-        local anchor, w, h = self.IconBorder or self, self:GetSize()
-        local ww, hh = anchor:GetSize()
-        if (ww == 0 or hh == 0) then
-            anchor = self.Icon or self.icon or self
-            w, h = anchor:GetSize()
-        else
-            w, h = min(w, ww), min(h, hh)
-        end
+        -- local anchor, w, h = self.IconBorder or self, self:GetSize()
+        -- local ww, hh = anchor:GetSize()
+        -- if (ww == 0 or hh == 0) then
+        --     anchor = self.Icon or self.icon or self
+        --     w, h = anchor:GetSize()
+        -- else
+        --     w, h = min(w, ww), min(h, hh)
+        -- end
+        local anchor = self.IconBorder or self.Icon or self.icon or self
         self.ItemLevelFrame = CreateFrame("Frame", nil, self)
-        self.ItemLevelFrame:SetScale(max(0.75, h<32 and h/32 or 1))
+        --self.ItemLevelFrame:SetScale(max(0.75, h<32 and h/32 or 1))
         self.ItemLevelFrame:SetFrameLevel(self:GetFrameLevel() + 1)
-        self.ItemLevelFrame:SetSize(w, h)
-        self.ItemLevelFrame:SetPoint("CENTER", anchor, "CENTER", 0, 0)
+        --self.ItemLevelFrame:SetSize(w, h)
+       -- self.ItemLevelFrame:SetPoint("CENTER", anchor, "CENTER", 0, 0)
+        self.ItemLevelFrame:SetAllPoints(anchor)
         self.ItemLevelFrame.slotString = self.ItemLevelFrame:CreateFontString(nil, "OVERLAY")
         self.ItemLevelFrame.slotString:SetFont(STANDARD_TEXT_FONT, 10+fontAdjust, "OUTLINE")
         self.ItemLevelFrame.slotString:SetPoint("BOTTOMRIGHT", 1, 2)
@@ -60,6 +60,10 @@ end
 
 --設置裝等文字
 local function SetItemLevelString(self, text, quality, link)
+    if not text then
+        self:SetText("")
+        return
+    end
     if (quality and TinyInspectDB and TinyInspectDB.ShowColoredItemLevelString) then
         local r, g, b, hex = C_Item.GetItemQualityColor(quality)
         text = format("|c%s%s|r", hex, text)
@@ -72,25 +76,34 @@ local function SetItemLevelString(self, text, quality, link)
 end
 
 --設置部位文字
-local function SetItemSlotString(self, class, equipSlot, link)
-    local slotText = ""
-    if (TinyInspectDB and TinyInspectDB.ShowItemSlotString) then
-        if (equipSlot and string.find(equipSlot, "INVTYPE_")) then
-            slotText = _G[equipSlot] or ""
-        elseif (class == ARMOR) then
-            slotText = class
-        elseif (link and C_Item.IsArtifactPowerItem(link)) then
-            slotText = ARTIFACT_POWER
-        elseif (link and C_ItemSocketInfo.IsArtifactRelicItem(link)) then
-            slotText = RELICSLOT
+local function GetItemSlotString(equipSlot, classID, subclassID, link, itemID)
+    local text = ""
+    if (equipSlot and string.find(equipSlot, "INVTYPE_") and equipSlot ~= "INVTYPE_NON_EQUIP_IGNORE") then
+        text = _G[equipSlot] or ""
+    elseif (link and C_Item.IsArtifactPowerItem(link)) then
+        text = ARTIFACT_POWER
+    elseif (link and C_ItemSocketInfo.IsArtifactRelicItem(link)) then
+        text = RELICSLOT
+    elseif (classID == Enum.ItemClass.Miscellaneous) then
+        if (subclassID == Enum.ItemMiscellaneousSubclass.Mount) then
+            text = MOUNTS
+        elseif (subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet) then
+            text = PET
+        elseif (itemID and C_ToyBox.GetToyInfo(itemID)) then
+            text = TOY
         end
     end
-    self:SetText(slotText)
+    return text
+end
+
+local function SetItemSlotString(self, slotText)
+    self:SetText(TinyInspectDB and TinyInspectDB.ShowItemSlotString and slotText or "")
 end
 
 --部分裝備無法一次讀取
 local function SetItemLevelScheduled(button, ItemLevelFrame, link)
-    if (not string.match(link, "item:(%d+):")) then return end
+    local itemID = C_Item.GetItemIDForItemInfo(link)
+    if (not itemID) then return end
     LibSchedule:AddTask({
         identity  = link,
         elasped   = 1,
@@ -98,77 +111,101 @@ local function SetItemLevelScheduled(button, ItemLevelFrame, link)
         frame     = ItemLevelFrame,
         button    = button,
         onExecute = function(self)
-            local count, level, _, _, quality, _, _, class, _, _, equipSlot = LibItemInfo:GetItemInfo(self.identity)
+            local count, level, _, _, quality, _, _, _, _, _, equipSlot, _, _, classID, subclassID = LibItemInfo:GetItemInfo(self.identity)
             if (count == 0) then
-                SetItemLevelString(self.frame.levelString, level > 0 and level or "", quality)
-                SetItemSlotString(self.frame.slotString, class, equipSlot, link)
-                self.button.OrigItemLink = link
-                self.button.OrigItemLevel = (level and level > 0) and level or ""
-                self.button.OrigItemQuality = quality
-                self.button.OrigItemClass = class
-                self.button.OrigItemEquipSlot = equipSlot
+                local levelText = ""
+                if level > 1 and quality > Enum.ItemQuality.Common then
+                    levelText = level
+                end
+                SetItemLevelString(self.frame.levelString, levelText, quality)
+                local slotText = GetItemSlotString(equipSlot, classID, subclassID, link, itemID)
+                SetItemSlotString(self.frame.slotString, slotText)
+                self.frame.itemInfo.link = link
+                self.frame.itemInfo.level = levelText
+                self.frame.itemInfo.quality = quality
+                self.frame.itemInfo.slotText = slotText
                 return true
             end
         end
     })
 end
 
+local iLvlClassIDs = {
+    [Enum.ItemClass.Weapon] = true,
+    [Enum.ItemClass.Armor] = true,
+    [Enum.ItemClass.Gem] = {
+        [Enum.ItemGemSubclass.Artifactrelic] = true,
+    },
+    [Enum.ItemClass.Profession] = true,
+    [Enum.ItemClass.Miscellaneous] = {
+        [Enum.ItemMiscellaneousSubclass.Junk] = true,
+    },
+    [Enum.ItemClass.Reagent] = {
+        [Enum.ItemReagentSubclass.ContextToken] = true,
+    },
+}
+
+local function isItemHasLevel(classID, subClassID)
+    local entry = iLvlClassIDs[classID]
+    if not entry then
+        return false
+    end
+
+    if entry == true then
+        return true
+    end
+
+    return subClassID and entry[subClassID] or false
+end
+
 --設置物品等級
 local function SetItemLevel(self, link, category)
-    if (not self) then return end
+    if not self then return end
     local frame = GetItemLevelFrame(self, category)
-    if (self.OrigItemLink == link) then
-        SetItemLevelString(frame.levelString, self.OrigItemLevel, self.OrigItemQuality, link)
-        SetItemSlotString(frame.slotString, self.OrigItemClass, self.OrigItemEquipSlot, self.OrigItemLink)
-    else
-        local level = ""
-        local _, count, quality, class, subclass, equipSlot
-        if link then
-            local linkType, id = string.match(link, "|H(%a+):(%d+):.-|h.-|h")
-            if linkType == "item" then
-                _, _, quality, _, _, class, subclass, _, equipSlot = C_Item.GetItemInfo(link)
-                -- 除了装备和圣物外,其它不显示装等
-                if ((equipSlot and string.find(equipSlot, "INVTYPE_"))
-                    or (subclass and string.find(subclass, RELICSLOT))) then
-                    count, level = LibItemInfo:GetItemInfo(link, nil, true)
-                else
-                    count = 0
-                    level = ""
-                end
-                -- 坐骑
-                if (subclass and subclass == MOUNTS) then
-                    class = subclass
-                end
-                if (count > 0) then
+    frame.itemInfo = frame.itemInfo or {}
+
+    if frame.itemInfo.link == link then
+        SetItemLevelString(frame.levelString, frame.itemInfo.level, frame.itemInfo.quality, link)
+        SetItemSlotString(frame.slotString, frame.itemInfo.slotText)
+        return
+    end
+
+    local levelText, slotText = "", ""
+    local _, quality, equipSlot, classID, subclassID
+
+    if link then
+        local linkType, id = string.match(link, "|H(%a+):(%d+):.-|h.-|h")
+        if linkType == "item" then
+            _, _, quality, _, _, _, _, _, equipSlot, _, _, classID, subclassID = C_Item.GetItemInfo(link)
+
+            if isItemHasLevel(classID, subclassID) then
+                local count, level = LibItemInfo:GetItemInfo(link, nil, true)
+                if count > 0 then
                     SetItemLevelString(frame.levelString, "...")
                     return SetItemLevelScheduled(self, frame, link)
-                else
-                    if (tonumber(level) == 0) then level = "" end
-                    SetItemLevelString(frame.levelString, level, quality, link)
-                    SetItemSlotString(frame.slotString, class, equipSlot, link)
                 end
-            elseif linkType == "keystone" then
-                -- 钥石
-                quality = select(3, C_Item.GetItemInfo(id))
-                level = strmatch(link, "|Hkeystone:%d+:%d+:(%d+):.-|h.-|h")
-                SetItemLevelString(frame.levelString, level, quality)
-                SetItemSlotString(frame.slotString)
-            elseif linkType == "battlepet" then
-                -- 宠物
-                level, quality = strmatch(link, "|Hbattlepet:%d+:(%d+):(%d+):.-|h.-|h")
-                SetItemLevelString(frame.levelString, level, quality)
-                SetItemSlotString(frame.slotString)
+
+                if level > 1 and quality > Enum.ItemQuality.Common then
+                    levelText = level
+                end
             end
-        else
-            SetItemLevelString(frame.levelString, "")
-            SetItemSlotString(frame.slotString)
+            slotText = GetItemSlotString(equipSlot, classID, subclassID, link, tonumber(id))
+        elseif linkType == "keystone" then
+            quality = select(3, C_Item.GetItemInfo(id))
+            levelText = strmatch(link, "|Hkeystone:%d+:%d+:(%d+):.-|h.-|h")
+        elseif linkType == "battlepet" then
+            levelText, quality = strmatch(link, "|Hbattlepet:%d+:(%d+):(%d+):.-|h.-|h")
+            slotText = PET
         end
-        self.OrigItemLink = link
-        self.OrigItemLevel = level
-        self.OrigItemQuality = quality
-        self.OrigItemClass = class
-        self.OrigItemEquipSlot = equipSlot
     end
+
+    SetItemLevelString(frame.levelString, levelText, quality, link)
+    SetItemSlotString(frame.slotString, slotText)
+
+    frame.itemInfo.link = link
+    frame.itemInfo.level = levelText
+    frame.itemInfo.quality = quality
+    frame.itemInfo.slotText = slotText
 end
 
 -- Gem
@@ -215,11 +252,8 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
     end
     if (itemIDOrLink) then
         local link
-        --Artifact
-        if (C_ItemSocketInfo.IsArtifactRelicItem(itemIDOrLink) or C_Item.IsArtifactPowerItem(itemIDOrLink)) then
-            SetItemLevel(self)
         --QuestInfo
-        elseif (self.type and self.objectType == "item") then
+        if (self.type and self.objectType == "item") then
             link = GetQuestItemLink(self.type, self:GetID())
             if (not link) then
                 link = select(2, C_Item.GetItemInfo(itemIDOrLink))
@@ -233,11 +267,14 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
         elseif (self.Tooltip) then
             link = select(2, self.Tooltip:GetItem())
             SetItemLevel(self, link)
+        elseif (type(itemIDOrLink) == "number") then
+            link = select(2, C_Item.GetItemInfo(itemIDOrLink))
+            SetItemLevel(self, link)
         else
             SetItemLevel(self, itemIDOrLink)
         end
     else
-        SetItemLevelString(frame.levelString, "")
+        SetItemLevelString(frame.levelString)
         SetItemSlotString(frame.slotString)
     end
 end)
@@ -324,9 +361,10 @@ local function SetPaperDollItemLevel(self, unit)
     local id = self:GetID()
     local frame = GetItemLevelFrame(self, "PaperDoll")
     if (unit and GetInventoryItemTexture(unit, id)) then
-        local _, level, _, link, quality, _, _, class, _, _, equipSlot = LibItemInfo:GetUnitItemInfo(unit, id)
-        SetItemLevelString(frame.levelString, level > 0 and level or "", quality, link)
-        SetItemSlotString(frame.slotString, class, equipSlot)
+        local _, level, _, link, quality, _, _, _, _, _, equipSlot, _, _, classID, subclassID = LibItemInfo:GetUnitItemInfo(unit, id)
+        local itemID = C_Item.GetItemIDForItemInfo(link)
+        SetItemLevelString(frame.levelString, level > 1 and level or "", quality, link)
+        SetItemSlotString(frame.slotString, GetItemSlotString(equipSlot, classID, subclassID, link, itemID))
         if (id == 16 or id == 17) then
             local _, mlevel, _, _, mquality = LibItemInfo:GetUnitItemInfo(unit, 16)
             local _, olevel, _, _, oquality = LibItemInfo:GetUnitItemInfo(unit, 17)
@@ -335,7 +373,7 @@ local function SetPaperDollItemLevel(self, unit)
             end
         end
     else
-        SetItemLevelString(frame.levelString, "")
+        SetItemLevelString(frame.levelString)
         SetItemSlotString(frame.slotString)
     end
     if (unit == "player") then
@@ -396,61 +434,68 @@ end)
 --  Chat ItemLevel  --
 ----------------------
 
-local Caches = {}
+local itemCache = {}
+local function ReplaceChatHyperlink(link, linkType, value)
+    if not link then return end
 
-local function ChatItemLevel(Hyperlink)
-    if (Caches[Hyperlink]) then
-        return Caches[Hyperlink]
-    end
-    local link = string.match(Hyperlink, "|H(.-)|h")
-    local count, level, name, _, quality, _, _, class, subclass, _, equipSlot = LibItemInfo:GetItemInfo(link)
-    if (tonumber(level) and level > 0) then
-        if (equipSlot == "INVTYPE_CLOAK" or equipSlot == "INVTYPE_TRINKET" or equipSlot == "INVTYPE_FINGER" or equipSlot == "INVTYPE_NECK") then
-            level = format("%s(%s)", level, _G[equipSlot] or equipSlot)
-        elseif (equipSlot and string.find(equipSlot, "INVTYPE_")) then
-            level = format("%s(%s-%s)", level, subclass or "", _G[equipSlot] or equipSlot)
-        elseif (class == ARMOR) then
-            level = format("%s(%s-%s)", level, subclass or "", class)
-        elseif (subclass and string.find(subclass, RELICSLOT)) then
-            level = format("%s(%s)", level, RELICSLOT)
-        else
-            level = nil
+    if not itemCache[link] then
+        if linkType == "item" then
+            local count, level, name, _, quality, _, _, class, subclass, _, equipSlot, _, _, classID, subclassID = LibItemInfo:GetItemInfo(link)
+            level = level > 1 and level or ""
+            local prefix
+            if (equipSlot == "INVTYPE_CLOAK" or equipSlot == "INVTYPE_TRINKET" or equipSlot == "INVTYPE_FINGER" or equipSlot == "INVTYPE_NECK") then
+                prefix = format("%s(%s)", level, _G[equipSlot] or equipSlot)
+            elseif (equipSlot and string.find(equipSlot, "INVTYPE_") and equipSlot ~= "INVTYPE_NON_EQUIP_IGNORE") then
+                prefix = format("%s(%s-%s)", level, subclass or "", _G[equipSlot] or equipSlot)
+            elseif (class == ARMOR) then
+                prefix = format("%s(%s-%s)", level, subclass or "", class)
+            elseif (subclass and string.find(subclass, RELICSLOT)) then
+                prefix = format("%s(%s)", level, RELICSLOT)
+            elseif (classID == Enum.ItemClass.Miscellaneous) then
+                if (subclassID == Enum.ItemMiscellaneousSubclass.Mount) then
+                    prefix = format("(%s)", MOUNTS)
+                elseif (subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet) then
+                    prefix = format("(%s)", PET)
+                elseif (value and C_ToyBox.GetToyInfo(value)) then
+                    prefix = format("(%s)", TOY)
+                end
+            end
+            if prefix then
+                local gem = IsItemHasGem(link)
+                if (quality == 6 and class == WEAPON) then gem = "" end
+                itemCache[link] = gsub(link, "|h%[(.-)%]|h", "|h[" .. prefix .. ":" .. name .. "]|h" .. gem)
+            elseif (count == 0) then
+                itemCache[link] = link
+            end
+        elseif linkType == "battlepet" then
+            local level = strmatch(link, "|Hbattlepet:%d+:(%d+):%d+:.-|h.-|h") or ""
+            local prefix = format("%s(%s)", level, PET)
+            itemCache[link] = gsub(link, "|h%[(.-)%]|h", "|h[" .. prefix .. ":%1]|h")
         end
-        if (level) then
-            local gem = IsItemHasGem(link)
-            if (quality == 6 and class == WEAPON) then gem = "" end
-            Hyperlink = Hyperlink:gsub("|h%[(.-)%]|h", "|h["..level..":"..name.."]|h"..gem)
-        end
-        Caches[Hyperlink] = Hyperlink
-    elseif (subclass and subclass == MOUNTS) then
-        Hyperlink = Hyperlink:gsub("|h%[(.-)%]|h", "|h[("..subclass..")%1]|h")
-        Caches[Hyperlink] = Hyperlink
-    elseif (count == 0) then
-        Caches[Hyperlink] = Hyperlink
     end
-    return Hyperlink
+    return itemCache[link]
 end
 
 local function filter(self, event, msg, ...)
     if (TinyInspectDB and TinyInspectDB.EnableItemLevel and TinyInspectDB.EnableItemLevelChat) then
-        msg = msg:gsub("(|Hitem:%d+:.-|h.-|h)", ChatItemLevel)
+        msg = gsub(msg, "(|H([^:]+):(%d+):.-|h.-|h)", ReplaceChatHyperlink)
     end
     return false, msg, ...
 end
 
-ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_SAY", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_BATTLEGROUND", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_LOOT", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_CHANNEL", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_SAY", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_YELL", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_WHISPER", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_BN_WHISPER", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_RAID", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_RAID_LEADER", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_PARTY", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_GUILD", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_BATTLEGROUND", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_LOOT", filter)
 
 -- 位置設置
 LibEvent:attachTrigger("ITEMLEVEL_FRAME_SHOWN", function(self, frame, parent, category)

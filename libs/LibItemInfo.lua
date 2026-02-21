@@ -77,7 +77,7 @@ if (locale == "koKR") then
     end
 end
 
-function lib:GetItemLevelViaTooltip(tooltipData)
+function lib:GetItemLevelViaTooltip(tooltipData, link)
     if not tooltipData then
         return 0
     end
@@ -100,6 +100,10 @@ function lib:GetItemLevelViaTooltip(tooltipData)
         end
     end
 
+    if not itemLevel and link then
+        itemLevel = C_Item.GetDetailedItemLevelInfo(link)
+    end
+
     return itemLevel or 0
 end
 
@@ -110,7 +114,7 @@ function lib:GetItemInfo(link, stats, withoutExtra)
         return 0, 0
     end
 
-    local level = self:GetItemLevelViaTooltip(tooltipData)
+    local level = self:GetItemLevelViaTooltip(tooltipData, link)
     if level == -1 then
         return 1, 0
     end
@@ -130,7 +134,10 @@ function lib:GetContainerItemLevel(pid, id)
         return 0
     end
 
-    return self:GetItemLevelViaTooltip(C_TooltipInfo.GetBagItem(pid, id))
+    local link = C_Container.GetContainerItemLink(pid, id)
+    local tooltipData = C_TooltipInfo.GetBagItem(pid, id)
+
+    return self:GetItemLevelViaTooltip(tooltipData, link)
 end
 
 --獲取UNIT物品實際等級信息
@@ -145,7 +152,7 @@ function lib:GetUnitItemInfo(unit, index, stats)
         return 0, 0
     end
 
-    local level = self:GetItemLevelViaTooltip(tooltipData)
+    local level = self:GetItemLevelViaTooltip(tooltipData, link)
     if level == -1 then
         return 1, 0
     end
