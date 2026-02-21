@@ -9,170 +9,11 @@ local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
 
 local guids, inspecting = {}, false
 
--------------------------------------
--- SafeUnitAPI: 安全的 unit API 包装器
--- 用于在受保护执行环境中安全调用 unit API
--------------------------------------
-local SafeUnitAPI = {}
-
--- 通用保护包装函数
-local function safeCall(func, default)
-    local result, success = default, false
-    success = pcall(function() result = func() end)
-    return success and result or default
-end
-
--- UnitGUID: 返回 guid 或 nil
-function SafeUnitAPI.GUID(unit)
-    if not unit then return nil end
-    local guid, success = nil, false
-    success = pcall(function() guid = UnitGUID(unit) end)
-    if not success then return nil end
-    if issecretvalue and issecretvalue(guid) then return nil end
-    return guid
-end
-
--- UnitHealthMax: 返回 hp 或 nil
-function SafeUnitAPI.HealthMax(unit)
-    if not unit then return nil end
-    local hp, success = nil, false
-    success = pcall(function() hp = UnitHealthMax(unit) end)
-    if not success then return nil end
-    if issecretvalue and issecretvalue(hp) then return nil end
-    return hp
-end
-
--- UnitName: 返回 name, realm 或 nil, nil
-function SafeUnitAPI.Name(unit)
-    if not unit then return nil, nil end
-    local name, realm = nil, nil
-    local success = pcall(function() 
-        name, realm = UnitName(unit) 
-    end)
-    if not success then return nil, nil end
-    if issecretvalue and issecretvalue(name) then name = nil end
-    if issecretvalue and issecretvalue(realm) then realm = nil end
-    return name, realm
-end
-
--- UnitClass: 返回 class 或 nil
-function SafeUnitAPI.Class(unit)
-    if not unit then return nil end
-    local class, success = nil, false
-    success = pcall(function() class = select(2, UnitClass(unit)) end)
-    if not success then return nil end
-    if issecretvalue and issecretvalue(class) then return nil end
-    return class
-end
-
--- UnitLevel: 返回 level 或 nil
-function SafeUnitAPI.Level(unit)
-    if not unit then return nil end
-    local level, success = nil, false
-    success = pcall(function() level = UnitLevel(unit) end)
-    if not success then return nil end
-    if issecretvalue and issecretvalue(level) then return nil end
-    return level
-end
-
--- UnitIsPlayer: 返回 true/false
-function SafeUnitAPI.IsPlayer(unit)
-    if not unit then return false end
-    return safeCall(function() return UnitIsPlayer(unit) end, false)
-end
-
--- CanInspect: 返回 true/false
-function SafeUnitAPI.CanInspect(unit)
-    if not unit then return false end
-    return safeCall(function() return CanInspect(unit) end, false)
-end
-
--- UnitIsVisible: 返回 true/false
-function SafeUnitAPI.IsVisible(unit)
-    if not unit then return false end
-    return safeCall(function() return UnitIsVisible(unit) end, false)
-end
-
--- NotifyInspect: 返回是否成功
-function SafeUnitAPI.NotifyInspect(unit)
-    if not unit then return false end
-    local success = false
-    pcall(function() NotifyInspect(unit) success = true end)
-    return success
-end
-
--- 安全获取 tooltipData 字段
--- 先 pcall 获取，再检查是否是受保护值
-function SafeUnitAPI.TooltipDataField(tooltipData, field)
-    if not tooltipData then return nil end
-    local value, success = nil, false
-    success = pcall(function() value = tooltipData[field] end)
-    if not success then return nil end
-    -- issecretvalue 不会报错，可以安全检查
-    if issecretvalue and issecretvalue(value) then return nil end
-    return value
-end
-
--- 安全比较 tooltipData.type
-function SafeUnitAPI.TooltipDataType(tooltipData, expectedType)
-    if not tooltipData then return false end
-    local typeValue = SafeUnitAPI.TooltipDataField(tooltipData, "type")
-    if not typeValue then return false end
-    return typeValue == expectedType
-end
-
--- 安全获取 tooltipData.guid
-function SafeUnitAPI.TooltipDataGUID(tooltipData)
-    return SafeUnitAPI.TooltipDataField(tooltipData, "guid")
-end
-
--- 安全获取 tooltipData.lines
-function SafeUnitAPI.TooltipDataLines(tooltipData)
-    return SafeUnitAPI.TooltipDataField(tooltipData, "lines")
-end
-
--- 安全获取文本（用于 FontString:GetText() 等）
-function SafeUnitAPI.GetText(fontString)
-    if not fontString then return nil end
-    local text, success = nil, false
-    success = pcall(function() text = fontString:GetText() end)
-    if not success then return nil end
-    -- issecretvalue 不会报错，可以安全检查
-    if issecretvalue and issecretvalue(text) then return nil end
-    return text
-end
-
--- 安全进行字符串查找
-function SafeUnitAPI.StringFind(text, pattern, init, plain)
-    if not text then return nil end
-    local result, success = nil, false
-    success = pcall(function() result = string.find(text, pattern, init, plain) end)
-    return success and result or nil
-end
-
--- 安全获取 tooltipData lineData 的 leftText
-function SafeUnitAPI.TooltipLineText(lineData)
-    if not lineData then return nil end
-    local text, success = nil, false
-    success = pcall(function() text = lineData.leftText end)
-    if not success then return nil end
-    -- issecretvalue 不会报错，可以安全检查
-    if issecretvalue and issecretvalue(text) then return nil end
-    return text
-end
-
--- 导出为全局，方便其他文件使用
-_G.SafeUnitAPI = SafeUnitAPI
-
 -- Global API
 function GetInspectInfo(unit, timelimit, checkhp)
-    if not unit then return end
-    local guid = SafeUnitAPI.GUID(unit)
+    local guid = UnitGUID(unit)
     if (not guid or not guids[guid]) then return end
-    if (checkhp) then
-        local currentHp = SafeUnitAPI.HealthMax(unit)
-        if (currentHp and currentHp ~= guids[guid].hp) then return end
-    end
+    if (checkhp and UnitHealthMax(unit) ~= guids[guid].hp) then return end
     if (not timelimit or timelimit == 0) then
         return guids[guid]
     end
@@ -184,10 +25,8 @@ end
 -- Global API
 function GetInspecting()
     if (InspectFrame and InspectFrame.unit) then
-        local guid = SafeUnitAPI.GUID(InspectFrame.unit)
-        if guid then
-            return guids[guid] or { inuse = true }
-        end
+        local guid = UnitGUID(InspectFrame.unit)
+        return guids[guid] or { inuse = true }
     end
     if (inspecting and inspecting.expired > time()) then
         return inspecting
@@ -196,7 +35,7 @@ end
 
 -- Global API @trigger UNIT_REINSPECT_READY
 function ReInspect(unit)
-    local guid = SafeUnitAPI.GUID(unit)
+    local guid = UnitGUID(unit)
     if (not guid) then return end
     local data = guids[guid]
     if (not data) then return end
@@ -245,24 +84,25 @@ end)
 
 -- @trigger UNIT_INSPECT_STARTED
 hooksecurefunc("NotifyInspect", function(unit)
-    local guid = SafeUnitAPI.GUID(unit)
+    if C_Secrets.ShouldUnitIdentityBeSecret(unit) then return end
+    local guid = UnitGUID(unit)
     if (not guid) then return end
     local data = guids[guid]
     if (data) then
         data.unit = unit
-        data.name, data.realm = SafeUnitAPI.Name(unit)
+        data.name, data.realm = UnitName(unit)
     else
         data = {
             unit   = unit,
             guid   = guid,
-            class  = SafeUnitAPI.Class(unit),
-            level  = SafeUnitAPI.Level(unit),
+            class  = select(2, UnitClass(unit)),
+            level  = UnitLevel(unit),
             ilevel = -1,
             spec   = nil,
-            hp     = SafeUnitAPI.HealthMax(unit),
+            hp     = UnitHealthMax(unit),
             timer  = time(),
         }
-        data.name, data.realm = SafeUnitAPI.Name(unit)
+        data.name, data.realm = UnitName(unit)
         guids[guid] = data
     end
     if (not data.realm) then
@@ -275,39 +115,33 @@ end)
 
 -- @trigger UNIT_INSPECT_READY
 LibEvent:attachEvent("INSPECT_READY", function(this, guid)
-    if (not guids[guid]) then return end
+    local unit = guids[guid] and guids[guid].unit
+    if not unit or UnitGUID(unit) ~= guid then
+        return
+    end
     LibSchedule:AddTask({
         identity  = guid,
         timer     = 0.1,
-        elasped   = 0,
-        expired   = GetTime() + 5,
-        repeats   = 2,  --重复次数 10.x里GetInventoryItemLink居然有概率返回nil,所以这里扫两次
+        elasped   = 0.1,
+        expired   = GetTime() + 3,
         data      = guids[guid],
         onTimeout = function(self) inspecting = false end,
         onExecute = function(self)
             local count, ilevel, _, weaponLevel, isArtifact, maxLevel = LibItemInfo:GetUnitItemLevel(self.data.unit)
             if (ilevel <= 0) then return true end
             if (count == 0 and ilevel > 0) then
-                --if (UnitIsVisible(self.data.unit) or self.data.ilevel == ilevel) then
-                    self.repeats = self.repeats - 1
-                    if (self.repeats <= 0) then
-                        self.data.timer = time()
-                        self.data.name = SafeUnitAPI.Name(self.data.unit)
-                        self.data.class = SafeUnitAPI.Class(self.data.unit)
-                        self.data.ilevel = ilevel
-                        self.data.maxLevel = maxLevel
-                        self.data.spec = GetInspectSpec(self.data.unit)
-                        self.data.hp = SafeUnitAPI.HealthMax(self.data.unit)
-                        self.data.weaponLevel = weaponLevel
-                        self.data.isArtifact = isArtifact
-                        LibEvent:trigger("UNIT_INSPECT_READY", self.data)
-                        inspecting = false
-                        return true
-                    end
-                --else
-                --    self.data.ilevel = ilevel
-                --    self.data.maxLevel = maxLevel
-                --end
+                self.data.timer = time()
+                self.data.name = UnitName(self.data.unit)
+                self.data.class = select(2, UnitClass(self.data.unit))
+                self.data.ilevel = ilevel
+                self.data.maxLevel = maxLevel
+                self.data.spec = GetInspectSpec(self.data.unit)
+                self.data.hp = UnitHealthMax(self.data.unit)
+                self.data.weaponLevel = weaponLevel
+                self.data.isArtifact = isArtifact
+                LibEvent:trigger("UNIT_INSPECT_READY", self.data)
+                inspecting = false
+                return true
             end
         end,
     })

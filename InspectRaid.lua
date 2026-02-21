@@ -24,7 +24,7 @@ local function GetMembers(num)
     local temp = {}
     for i = 1, num do
         unit = "raid"..i
-        guid = SafeUnitAPI.GUID(unit)
+        guid = UnitGUID(unit)
         if (guid) then temp[guid] = unit end
     end
     for guid, v in pairs(members) do
@@ -35,7 +35,7 @@ local function GetMembers(num)
     for guid, unit in pairs(temp) do
         if (members[guid]) then
             members[guid].unit = unit
-            members[guid].class = SafeUnitAPI.Class(unit)
+            members[guid].class = select(2, UnitClass(unit))
             members[guid].role  = UnitGroupRolesAssigned(unit)
             members[guid].done  = GetInspectInfo(unit, 0, true)
         else
@@ -43,12 +43,12 @@ local function GetMembers(num)
                 done   = false,
                 guid   = guid,
                 unit   = unit,
-                class  = SafeUnitAPI.Class(unit),
+                class  = select(2, UnitClass(unit)),
                 role   = UnitGroupRolesAssigned(unit),
                 ilevel = -1,
             }
         end
-        members[guid].name, members[guid].realm = SafeUnitAPI.Name(unit)
+        members[guid].name, members[guid].realm = UnitName(unit)
         if (not members[guid].realm) then
             members[guid].realm = GetRealmName()
         end
@@ -59,32 +59,27 @@ end
 --觀察 @trigger RAID_INSPECT_STARTED
 local function SendInspect(unit)
     if (GetInspecting()) then return end
-    if (unit and SafeUnitAPI.IsVisible(unit) and SafeUnitAPI.CanInspect(unit)) then
+    if (unit and UnitIsVisible(unit) and CanInspect(unit)) then
         ClearInspectPlayer()
-        SafeUnitAPI.NotifyInspect(unit)
-        local guid = SafeUnitAPI.GUID(unit)
-        if guid and members[guid] then
-            LibEvent:trigger("RAID_INSPECT_STARTED", members[guid])
-        end
+        NotifyInspect(unit)
+        LibEvent:trigger("RAID_INSPECT_STARTED", members[UnitGUID(unit)])
         return
     end
     for guid, v in pairs(members) do
-        if ((not v.done or v.ilevel <= 0) and SafeUnitAPI.IsVisible(v.unit) and SafeUnitAPI.CanInspect(v.unit)) then
+        if ((not v.done or v.ilevel <= 0) and UnitIsVisible(v.unit) and CanInspect(v.unit)) then
             ClearInspectPlayer()
-            SafeUnitAPI.NotifyInspect(v.unit)
+            NotifyInspect(v.unit)
             LibEvent:trigger("RAID_INSPECT_STARTED", v)
             return v
         end
     end
 end
 
-local SendAddonMessage = C_ChatInfo and C_ChatInfo.SendAddonMessage or function() end
-
 --发送自己的信息
 local function SendPlayerInfo()
     local ilvl = select(2, GetAverageItemLevel())
     local spec = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()))
-    SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "RAID")
+    C_ChatInfo.SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "RAID")
 end
 
 --解析发送的信息
@@ -379,17 +374,9 @@ frame.panel.rescanButton:SetScript("OnClick", function(self)
 end)
 
 --團友變更或觀察到數據時更新顯示
-local function UpdateList()
+LibEvent:attachTrigger("RAID_MEMBER_CHANGED, RAID_INSPECT_READY", function(self)
     MakeMembersList()
     SortAndShowMembersList()
-end
-
-LibEvent:attachTrigger("RAID_MEMBER_CHANGED, RAID_INSPECT_READY", function(self)
-    LibSchedule:AddTask({
-        identity  = "InspectRaidUpdateList",
-        elasped   = 0.2,
-        onTimeout = UpdateList,
-    })
 end)
 
 --高亮正在讀取的人員

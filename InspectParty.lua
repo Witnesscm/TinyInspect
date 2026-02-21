@@ -6,8 +6,6 @@
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 local LibSchedule = LibStub:GetLibrary("LibSchedule.7000")
 
-local ChatFrame_AddMessageEventFilter = ChatFrame_AddMessageEventFilter or ChatFrameUtil.AddMessageEventFilter
-
 local members, numMembers = {}, 0
 
 --是否觀察完畢
@@ -26,7 +24,7 @@ local function GetMembers(num)
     local temp = {}
     for i = 1, num do
         unit = "party"..i
-        guid = SafeUnitAPI.GUID(unit)
+        guid = UnitGUID(unit)
         if (guid) then temp[guid] = unit end
     end
     for guid, v in pairs(members) do
@@ -38,16 +36,16 @@ local function GetMembers(num)
         if (members[guid]) then
             members[guid].done = false
             members[guid].unit = unit
-            members[guid].class = SafeUnitAPI.Class(unit)
+            members[guid].class = select(2, UnitClass(unit))
         else
             members[guid] = {
                 done   = false,
                 unit   = unit,
-                class  = SafeUnitAPI.Class(unit),
+                class  = select(2, UnitClass(unit)),
                 ilevel = -1,
             }
         end
-        members[guid].name, members[guid].realm = SafeUnitAPI.Name(unit)
+        members[guid].name, members[guid].realm = UnitName(unit)
         if (not members[guid].realm) then
             members[guid].realm = GetRealmName()
         end
@@ -58,22 +56,20 @@ end
 local function SendInspect()
     if (GetInspecting()) then return end
     for guid, v in pairs(members) do
-        if ((not v.done or v.ilevel <= 0) and UnitIsConnected(v.unit) and SafeUnitAPI.CanInspect(v.unit)) then
+        if ((not v.done or v.ilevel <= 0) and UnitIsConnected(v.unit) and CanInspect(v.unit)) then
             ClearInspectPlayer()
-            SafeUnitAPI.NotifyInspect(v.unit)
+            NotifyInspect(v.unit)
             LibEvent:trigger("PARTY_INSPECT_STARTED", v)
             return v
         end
     end
 end
 
-local SendAddonMessage = C_ChatInfo and C_ChatInfo.SendAddonMessage or function() end
-
 --发送自己的信息
 local function SendPlayerInfo()
     local ilvl = select(2, GetAverageItemLevel())
     local spec = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()))
-    SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "PARTY")
+    C_ChatInfo.SendAddonMessage("TinyInspect", format("%s|%s|%s", "LV", ilvl, spec or ""), "PARTY")
 end
 
 --解析发送的信息
@@ -111,18 +107,14 @@ LibEvent:attachEvent("GROUP_ROSTER_UPDATE", function(self)
     local numCurrent = GetNumSubgroupMembers()
     if (numCurrent > numMembers) then
         GetMembers(numCurrent)
-        local playerGuid = SafeUnitAPI.GUID("player")
-        if playerGuid then
-            local playerName = SafeUnitAPI.Name("player")
-            members[playerGuid] = {
-                name   = playerName,
-                class  = SafeUnitAPI.Class("player"),
-                ilevel = select(2, GetAverageItemLevel()),
-                done   = true,
-                unit   = "player",
-                spec   = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())),
-            }
-        end
+        members[UnitGUID("player")] = {
+            name   = UnitName("player"),
+            class  = select(2, UnitClass("player")),
+            ilevel = select(2, GetAverageItemLevel()),
+            done   = true,
+            unit   = "player",
+            spec   = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())),
+        }
         SendPlayerInfo()
         LibSchedule:AddTask({
             override  = true,
@@ -187,16 +179,15 @@ end
 local lastBroadcastTimer = 0
 local function filter(self, event, msg, name, ...)
     if (string.find(msg, label)) then
-        local playerName = SafeUnitAPI.Name("player")
-        local uname = (playerName or "") .. "-" .. GetRealmName()
+        local uname = UnitName("player") .. "-" .. GetRealmName()
         if (name ~= uname) then
             lastBroadcastTimer = GetTime()
         end
     end
     return false, msg, name, ...
 end
-ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", filter)
-ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_PARTY", filter)
+ChatFrameUtil.AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", filter)
 
 --報告裝等
 local function SendItemLevel(members)
