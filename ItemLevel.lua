@@ -233,10 +233,6 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
         elseif (self.Tooltip) then
             link = select(2, self.Tooltip:GetItem())
             SetItemLevel(self, link)
-        --(Bank)
-        elseif (tonumber(itemIDOrLink) and self.hasItem) then
-            link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
-            SetItemLevel(self, link)
         else
             SetItemLevel(self, itemIDOrLink)
         end
