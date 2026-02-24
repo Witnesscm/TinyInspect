@@ -267,7 +267,7 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
         elseif (self.Tooltip) then
             link = select(2, self.Tooltip:GetItem())
             SetItemLevel(self, link)
-        elseif (type(itemIDOrLink) == "number") then
+        elseif (type(itemIDOrLink) == "number" and not self.currencyID and not self.currencyInfo) then
             link = select(2, C_Item.GetItemInfo(itemIDOrLink))
             SetItemLevel(self, link)
         else
