@@ -26,7 +26,7 @@ local function GetItemLevelFrame(self, category)
         -- else
         --     w, h = min(w, ww), min(h, hh)
         -- end
-        local anchor = self.IconBorder or self.Icon or self.icon or self
+        local anchor = self.IconOverlay or self.Icon or self.icon or self
         self.ItemLevelFrame = CreateFrame("Frame", nil, self)
         --self.ItemLevelFrame:SetScale(max(0.75, h<32 and h/32 or 1))
         self.ItemLevelFrame:SetFrameLevel(self:GetFrameLevel() + 1)
