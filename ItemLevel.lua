@@ -352,14 +352,10 @@ end
 -- Others
 if InboxFrame_Update then
     hooksecurefunc("InboxFrame_Update", function()
-        local numItems = GetInboxNumItems()
-        local index = ((_G.InboxFrame.pageNum - 1) * _G.INBOXITEMS_TO_DISPLAY) + 1
-        local firstItemQuantity
-        local button
         for i = 1, _G.INBOXITEMS_TO_DISPLAY do
-            if (index <= numItems) then
-                firstItemQuantity = select(14, GetInboxHeaderInfo(index))
-                button = _G["MailItem" .. i .. "Button"]
+            local button = _G["MailItem" .. i .. "Button"]
+            if (button.index and button:IsShown()) then
+                local firstItemQuantity = select(14, GetInboxHeaderInfo(button.index))
                 if (not firstItemQuantity) then
                     SetItemButtonQuality(button, nil)
                 end
