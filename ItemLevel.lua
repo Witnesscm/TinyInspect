@@ -349,6 +349,55 @@ if GuildNewsButton_SetText then
     end)
 end
 
+-- Others
+if InboxFrame_Update then
+    hooksecurefunc("InboxFrame_Update", function()
+        local numItems = GetInboxNumItems()
+        local index = ((_G.InboxFrame.pageNum - 1) * _G.INBOXITEMS_TO_DISPLAY) + 1
+        local firstItemQuantity
+        local button
+        for i = 1, _G.INBOXITEMS_TO_DISPLAY do
+            if (index <= numItems) then
+                firstItemQuantity = select(14, GetInboxHeaderInfo(index))
+                button = _G["MailItem" .. i .. "Button"]
+                if (not firstItemQuantity) then
+                    SetItemButtonQuality(button, nil)
+                end
+            end
+        end
+    end)
+end
+
+if OpenMailFrame_UpdateButtonPositions then
+    hooksecurefunc("OpenMailFrame_UpdateButtonPositions", function()
+        if (TinyInspectDB and not TinyInspectDB.EnableItemLevelOther) then
+            return
+        end
+        for i = 1, _G.ATTACHMENTS_MAX_RECEIVE do
+            local button = _G.OpenMailFrame.OpenMailAttachments[i]
+            if HasInboxItem(_G.InboxFrame.openMailID, i) then
+                local itemLink = GetInboxItemLink(InboxFrame.openMailID, i)
+                SetItemLevel(button, itemLink)
+            end
+        end
+    end)
+end
+
+if SendMailFrame_Update then
+    hooksecurefunc("SendMailFrame_Update", function()
+        if (TinyInspectDB and not TinyInspectDB.EnableItemLevelOther) then
+            return
+        end
+        for i = 1, _G.ATTACHMENTS_MAX_SEND do
+            local button = SendMailFrame.SendMailAttachments[i]
+            if HasSendMailItem(i) then
+                local itemLink = GetSendMailItemLink(i)
+                SetItemLevel(button, itemLink)
+            end
+        end
+    end)
+end
+
 -------------------
 --   PaperDoll  --
 -------------------
