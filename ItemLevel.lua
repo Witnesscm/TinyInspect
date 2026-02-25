@@ -250,7 +250,7 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
     if (TinyInspectDB and not TinyInspectDB.EnableItemLevelOther) then
         return frame:Hide()
     end
-    if (itemIDOrLink) then
+    if (itemIDOrLink and not tonumber(itemIDOrLink)) then
         local link
         --QuestInfo
         if (self.type and self.objectType == "item") then
@@ -266,9 +266,6 @@ hooksecurefunc("SetItemButtonQuality", function(self, quality, itemIDOrLink, sup
         --EmbeddedItemTooltip
         elseif (self.Tooltip) then
             link = select(2, self.Tooltip:GetItem())
-            SetItemLevel(self, link)
-        elseif (type(itemIDOrLink) == "number" and not self.currencyID and not self.currencyInfo) then
-            link = select(2, C_Item.GetItemInfo(itemIDOrLink))
             SetItemLevel(self, link)
         else
             SetItemLevel(self, itemIDOrLink)
