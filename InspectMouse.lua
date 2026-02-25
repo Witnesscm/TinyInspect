@@ -10,7 +10,8 @@ local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 local function GetTooltipUnit(self)
     local data = self:GetTooltipData()
     local guid = data and T:NotSecretValue(data.guid) and data.guid
-    local unit = guid and UnitTokenFromGUID(guid)
+    local mouseover = UnitExists("mouseover") and "mouseover"
+    local unit = guid and UnitTokenFromGUID(guid) or mouseover
     return unit, guid
 end
 
@@ -19,7 +20,7 @@ local function FindLine(tooltip, keyword)
     for i = 2, tooltip:NumLines() do
         line = _G[tooltip:GetName() .. "TextLeft" .. i]
         text = line:GetText() or ""
-        if (string.find(text, keyword)) then
+        if (text and T:NotSecretValue(text) and string.find(text, keyword)) then
             return line, i, _G[tooltip:GetName() .. "TextRight" .. i]
         end
     end
