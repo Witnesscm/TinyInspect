@@ -57,30 +57,16 @@ local function GetItemAddableSockets(link, slot, itemLevel)
 end
 
 local INVSLOT_ENCHANT = {
-    [INVSLOT_CHEST] = 70,
-    [INVSLOT_LEGS] = 70,
-    [INVSLOT_FEET] = 70,
-    [INVSLOT_WRIST] = 70,
-    [INVSLOT_FINGER1] = 70,
-    [INVSLOT_FINGER2] = 70,
-    [INVSLOT_BACK] = 70,
-    [INVSLOT_MAINHAND] = 70,
-    [INVSLOT_OFFHAND] = 70,
+    [INVSLOT_HEAD] = 120,
+    [INVSLOT_SHOULDER] = 120,
+    [INVSLOT_CHEST] = 120,
+    [INVSLOT_LEGS] = 120,
+    [INVSLOT_FEET] = 120,
+    [INVSLOT_FINGER1] = 120,
+    [INVSLOT_FINGER2] = 120,
+    [INVSLOT_MAINHAND] = 120,
+    [INVSLOT_OFFHAND] = 120,
 }
-
-if GetServerExpansionLevel() == 11 then
-    INVSLOT_ENCHANT = {
-        [INVSLOT_HEAD] = 120,
-        [INVSLOT_SHOULDER] = 120,
-        [INVSLOT_CHEST] = 120,
-        [INVSLOT_LEGS] = 120,
-        [INVSLOT_FEET] = 120,
-        [INVSLOT_FINGER1] = 120,
-        [INVSLOT_FINGER2] = 120,
-        [INVSLOT_MAINHAND] = 120,
-        [INVSLOT_OFFHAND] = 120,
-    }
-end
 
 local function CheckEnchantmentSlot(slotID, itemLevel, classID)
     local minLevel = INVSLOT_ENCHANT[slotID]
