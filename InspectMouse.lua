@@ -55,7 +55,7 @@ local function OnTooltipSetUnit(self)
 
     local data = GetInspectInfo(unit, nil, true)
     if (data and data.ilevel > 0) then
-        return AppendToGameTooltip(floor(data.ilevel), data.spec, data.weaponLevel)
+        return AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel)
     end
     if (not CanInspect(unit)) then return end
     local inspecting = GetInspecting()
@@ -77,6 +77,6 @@ TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, OnTooltipSetU
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
     if (TinyInspectDB and not TinyInspectDB.EnableMouseItemLevel) then return end
     if (T:UnitExists("mouseover") and data.guid == UnitGUID("mouseover")) then
-        AppendToGameTooltip(floor(data.ilevel), data.spec, data.weaponLevel)
+        AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel)
     end
 end)
