@@ -251,7 +251,7 @@ local function ShowGemAndEnchant(frame, ItemLink, anchorFrame, itemframe)
         icon:SetPoint("LEFT", anchorFrame, "RIGHT", num == 1 and 6 or 1, 0)
         icon:Show()
         anchorFrame = icon
-    elseif (not enchantID and CheckEnchantmentSlot(itemframe.index, itemframe.quality, itemframe.classID)) then
+    elseif (not enchantID and CheckEnchantmentSlot(itemframe.index, itemframe.level, itemframe.classID)) then
         num = num + 1
         icon = GetIconFrame(frame)
         icon.title = ENCHANTS..": "..itemframe.slot
