@@ -6,6 +6,22 @@ local _, ns = ...
 local T = ns.T
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
+local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
+
+local tierSlots = { 1, 3, 5, 7, 10 }
+
+local function GetUnitTierSetCount(unit)
+    local sets = 0
+    if TinyInspectDB and TinyInspectDB.TierSetTable then
+        for _, index in ipairs(tierSlots) do
+            local setID = select(18, LibItemInfo:GetUnitItemInfo(unit, index))
+            if setID and TinyInspectDB.TierSetTable[setID] then
+                sets = sets + 1
+            end
+        end
+    end
+    return sets
+end
 
 local function GetTooltipUnit(self)
     local data = self:GetTooltipData()
@@ -28,13 +44,16 @@ end
 
 local LevelLabel = STAT_AVERAGE_ITEM_LEVEL .. ": "
 
-local function AppendToGameTooltip(ilevel, spec, weaponLevel)
+local function AppendToGameTooltip(ilevel, spec, weaponLevel, sets)
     if (TinyInspectDB and not TinyInspectDB.EnableMouseItemLevel) then return end
     spec = spec or ""
     if (TinyInspectDB and not TinyInspectDB.EnableMouseSpecialization) then spec = "" end
     local ilvlLine, _, lineRight = FindLine(GameTooltip, LevelLabel)
     local ilvlText = format("%s|cffffffff%s|r", LevelLabel, ilevel)
     local specText = format("|cffb8b8b8%s|r", spec)
+    if (sets and sets > 0 and TinyInspectDB.EnableMouseTierSet) then
+        ilvlText = ilvlText .. (ns.formatSets[sets] or "")
+    end
     if (weaponLevel and weaponLevel > 0 and TinyInspectDB.EnableMouseWeaponLevel) then
         ilvlText = ilvlText .. format(" (%s)", weaponLevel)
     end
@@ -55,7 +74,8 @@ local function OnTooltipSetUnit(self)
 
     local data = GetInspectInfo(unit, nil, true)
     if (data and data.ilevel > 0) then
-        return AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel)
+        local sets = GetUnitTierSetCount(unit)
+        return AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel, sets)
     end
     if (not CanInspect(unit)) then return end
     local inspecting = GetInspecting()
@@ -76,7 +96,9 @@ TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, OnTooltipSetU
 --@see InspectCore.lua
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
     if (TinyInspectDB and not TinyInspectDB.EnableMouseItemLevel) then return end
-    if (T:UnitExists("mouseover") and data.guid == UnitGUID("mouseover")) then
-        AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel)
+    local unit = "mouseover"
+    if (T:UnitExists(unit) and data.guid == UnitGUID(unit)) then
+        local sets = GetUnitTierSetCount(unit)
+        AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel, sets)
     end
 end)

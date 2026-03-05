@@ -38,7 +38,6 @@ local DefaultDB = {
         EnableItemLevelOther = true,
     ShowInspectAngularBorder = false,     --觀察面板直角邊框
     ShowInspectColoredLabel = true,       --觀察面板高亮橙裝武器標簽
-    ShowInspectTierSet = true,            --觀察面板顯示套裝數量
         TierSetTable = {},
         seasonID = 0,
     ShowCharacterItemSheet = true,        --顯示玩家自己裝備列表
@@ -51,8 +50,9 @@ local DefaultDB = {
         ShowPartySpecialization = true,   --顯示隊友天賦
     EnableRaidItemLevel = false,          --團隊裝等
     EnableMouseItemLevel = true,          --鼠標裝等
-    EnableMouseSpecialization = true,     --鼠標天賦
-    EnableMouseWeaponLevel = true,        --鼠標武器等級
+    EnableMouseSpecialization = false,    --鼠標天賦
+    EnableMouseWeaponLevel = false,       --鼠標武器等級
+    EnableMouseTierSet = true,            --鼠標套裝數量
     PaperDollItemLevelOutsideString = false, --PaperDoll文字外邊顯示(沒有在配置面板)
     ItemLevelAnchorPoint = "TOP",         --裝等位置
     ShowPluginGreenState = false,         --裝備綠字屬性前綴顯示
@@ -86,7 +86,6 @@ local options = {
     },
     { key = "ShowInspectAngularBorder" },
     { key = "ShowInspectColoredLabel" },
-    { key = "ShowInspectTierSet" },
     { key = "ShowCharacterItemSheet" },
     { key = "ShowInspectItemSheet",
         child = {
@@ -109,6 +108,7 @@ local options = {
       child = {
         { key = "EnableMouseSpecialization" },
         { key = "EnableMouseWeaponLevel" },
+        { key = "EnableMouseTierSet" },
       }
     },
 }

@@ -2,6 +2,7 @@
 -------------------------------------
 -- 查看装备等级 Author: M
 -------------------------------------
+local _, ns = ...
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
@@ -10,12 +11,12 @@ local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
 local IsCorruptedItem = C_Item.IsCorruptedItem or function(link) return false end
 
 -- Credit: NDui
-local formatSets = {
-    [1] = " |cff14b200(1/4)", -- green
-    [2] = " |cff0091f2(2/4)", -- blue
-    [3] = " |cff0091f2(3/4)", -- blue
-    [4] = " |cffc745f9(4/4)", -- purple
-    [5] = " |cffc745f9(5/5)", -- purple
+ns.formatSets = {
+    [1] = " |cff14b200(1/4)|r", -- green
+    [2] = " |cff0091f2(2/4)|r", -- blue
+    [3] = " |cff0091f2(3/4)|r", -- blue
+    [4] = " |cffc745f9(4/4)|r", -- purple
+    [5] = " |cffc745f9(5/5)|r", -- purple
 }
 
 local TierSetInvType = {
@@ -314,8 +315,8 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
         end
         LibEvent:trigger("INSPECT_ITEMFRAME_UPDATED", itemframe)
     end
-    if (TinyInspectDB and TinyInspectDB.ShowInspectTierSet and sets > 0) then
-        frame.level:SetText(frame.level:GetText()..formatSets[sets])
+    if (sets > 0) then
+        frame.level:SetText(frame.level:GetText()..ns.formatSets[sets])
     end
     if (mframe and oframe and (mframe.quality == 6 or oframe.quality == 6)) then
         level = max(mframe.level, oframe.level)
