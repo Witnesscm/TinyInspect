@@ -102,7 +102,7 @@ end
 
 --部分裝備無法一次讀取
 local function SetItemLevelScheduled(button, ItemLevelFrame, link)
-    local itemID = C_Item.GetItemIDForItemInfo(link)
+    local itemID = link and tonumber(strmatch(link, "item:(%d+)"))
     if (not itemID) then return end
     LibSchedule:AddTask({
         identity  = link,
@@ -404,7 +404,7 @@ local function SetPaperDollItemLevel(self, unit)
     local frame = GetItemLevelFrame(self, "PaperDoll")
     if (unit and GetInventoryItemTexture(unit, id)) then
         local _, level, _, link, quality, _, _, _, _, _, equipSlot, _, _, classID, subclassID = LibItemInfo:GetUnitItemInfo(unit, id)
-        local itemID = C_Item.GetItemIDForItemInfo(link)
+        local itemID = link and tonumber(strmatch(link, "item:(%d+)"))
         SetItemLevelString(frame.levelString, level > 1 and level or "", quality, link)
         SetItemSlotString(frame.slotString, GetItemSlotString(equipSlot, classID, subclassID, link, itemID))
         if (id == 16 or id == 17) then
