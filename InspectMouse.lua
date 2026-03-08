@@ -70,14 +70,13 @@ local function OnTooltipSetUnit(self)
     if self:IsForbidden() or self ~= GameTooltip then return end
 
     local unit, guid = GetTooltipUnit(self)
-    if not unit or not UnitIsPlayer(unit) then return end
+    if not unit or not CanInspect(unit) then return end
 
     local data = GetInspectInfo(unit, nil, true)
     if (data and data.ilevel > 0) then
         local sets = GetUnitTierSetCount(unit)
         return AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel, sets)
     end
-    if (not CanInspect(unit)) then return end
     local inspecting = GetInspecting()
     if (inspecting) then
         if (inspecting.guid ~= guid) then
