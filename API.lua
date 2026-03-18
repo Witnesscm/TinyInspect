@@ -54,6 +54,11 @@ do
         return unit and UnitExists(unit)
     end
 
+    function T:UnitGUID(unit)
+        if T:IsSecretUnit(unit) then return end
+        local success, guid = pcall(UnitGUID, unit)
+        return success and guid
+    end
 end
 
 do

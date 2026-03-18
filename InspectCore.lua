@@ -2,6 +2,8 @@
 -------------------------------------
 -- InspectCore Author: M
 -------------------------------------
+local _, ns = ...
+local T = ns.T
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
 local LibSchedule = LibStub:GetLibrary("LibSchedule.7000")
@@ -84,8 +86,7 @@ end)
 
 -- @trigger UNIT_INSPECT_STARTED
 hooksecurefunc("NotifyInspect", function(unit)
-    if C_Secrets.ShouldUnitIdentityBeSecret(unit) then return end
-    local guid = UnitGUID(unit)
+    local guid = T:UnitGUID(unit)
     if (not guid) then return end
     local data = guids[guid]
     if (data) then
@@ -116,7 +117,7 @@ end)
 -- @trigger UNIT_INSPECT_READY
 LibEvent:attachEvent("INSPECT_READY", function(this, guid)
     local unit = guids[guid] and guids[guid].unit
-    if not unit or UnitGUID(unit) ~= guid then
+    if not unit or T:UnitGUID(unit) ~= guid then
         return
     end
     LibSchedule:AddTask({
