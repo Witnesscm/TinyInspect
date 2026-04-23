@@ -13,7 +13,7 @@ local guids, inspecting = {}, false
 
 -- Global API
 function GetInspectInfo(unit, timelimit)
-    local guid = UnitGUID(unit)
+    local guid = T:UnitGUID(unit)
     if (not guid or not guids[guid]) then return end
     if (not timelimit or timelimit == 0) then
         return guids[guid]
@@ -36,7 +36,7 @@ end
 
 -- Global API @trigger UNIT_REINSPECT_READY
 function ReInspect(unit)
-    local guid = UnitGUID(unit)
+    local guid = T:UnitGUID(unit)
     if (not guid) then return end
     local data = guids[guid]
     if (not data) then return end

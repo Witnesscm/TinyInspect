@@ -96,7 +96,7 @@ TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, OnTooltipSetU
 LibEvent:attachTrigger("UNIT_INSPECT_READY", function(self, data)
     if (TinyInspectDB and not TinyInspectDB.EnableMouseItemLevel) then return end
     local unit = "mouseover"
-    if (T:UnitExists(unit) and data.guid == UnitGUID(unit)) then
+    if (T:UnitExists(unit) and data.guid == T:UnitGUID(unit)) then
         local sets = GetUnitTierSetCount(unit)
         AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel, sets)
     end
