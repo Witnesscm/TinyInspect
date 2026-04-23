@@ -161,7 +161,7 @@ local function GetInspectItemListFrame(parent)
         frame.title:SetPoint("TOPLEFT", frame, "TOPLEFT", 66, -18)
         frame.level = frame:CreateFontString(nil, "ARTWORK", itemfont)
         frame.level:SetPoint("TOPLEFT", frame, "TOPLEFT", 66, -42)
-        frame.level:SetFont(frame.level:GetFont(), 14, "THINOUTLINE")
+        frame.level:SetFont(frame.level:GetFont(), 14, "OUTLINE")
 
         local itemframe
         local fontsize = GetLocale():sub(1,2) == "zh" and 12 or 9
@@ -191,7 +191,7 @@ local function GetInspectItemListFrame(parent)
             itemframe.label:SetBackdropBorderColor(0, 0.9, 0.9, 0.2)
             itemframe.label:SetBackdropColor(0, 0.9, 0.9, 0.2)
             itemframe.label.text = itemframe.label:CreateFontString(nil, "ARTWORK")
-            itemframe.label.text:SetFont(UNIT_NAME_FONT, fontsize, "THINOUTLINE")
+            itemframe.label.text:SetFont(UNIT_NAME_FONT, fontsize, "OUTLINE")
             itemframe.label.text:SetSize(34, 14)
             itemframe.label.text:SetPoint("CENTER", 1, 0)
             itemframe.label.text:SetText(v.name)

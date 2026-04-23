@@ -15,7 +15,7 @@ hooksecurefunc("ShowInspectItemListFrame", function(unit, parent, itemLevel, max
         frame.specicon:SetAlpha(0.4)
         frame.specicon:SetMask("Interface\\Minimap\\UI-Minimap-Background")
         frame.spectext = frame:CreateFontString(nil, "BORDER")
-        frame.spectext:SetFont(SystemFont_Outline_Small:GetFont(), 10, "THINOUTLINE")
+        frame.spectext:SetFont(SystemFont_Outline_Small:GetFont(), 10, "OUTLINE")
         frame.spectext:SetPoint("BOTTOM", frame.specicon, "BOTTOM")
         frame.spectext:SetJustifyH("CENTER")
         frame.spectext:SetAlpha(0.5)

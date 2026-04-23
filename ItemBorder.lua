@@ -104,6 +104,6 @@ if (RankFrame) then
     RankFrame.Texture:Hide()
     RankFrame:SetPoint("CENTER", CharacterNeckSlot, "BOTTOM", 0, 8)
     local fontFile, fontSize, fontFlags = TextStatusBarText:GetFont()
-    RankFrame.Label:SetFont(fontFile, fontSize, "THINOUTLINE")
+    RankFrame.Label:SetFont(fontFile, fontSize, "OUTLINE")
     RankFrame.Label:SetTextColor(0, 0.9, 0.9)
 end
