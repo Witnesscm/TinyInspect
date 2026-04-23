@@ -72,7 +72,7 @@ local function OnTooltipSetUnit(self)
     local unit, guid = GetTooltipUnit(self)
     if not unit or not CanInspect(unit) then return end
 
-    local data = GetInspectInfo(unit, nil, true)
+    local data = GetInspectInfo(unit, 120)
     if (data and data.ilevel > 0) then
         local sets = GetUnitTierSetCount(unit)
         return AppendToGameTooltip(format("%.1f", data.ilevel), data.spec, data.weaponLevel, sets)

@@ -12,10 +12,9 @@ local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
 local guids, inspecting = {}, false
 
 -- Global API
-function GetInspectInfo(unit, timelimit, checkhp)
+function GetInspectInfo(unit, timelimit)
     local guid = UnitGUID(unit)
     if (not guid or not guids[guid]) then return end
-    if (checkhp and UnitHealthMax(unit) ~= guids[guid].hp) then return end
     if (not timelimit or timelimit == 0) then
         return guids[guid]
     end
@@ -100,7 +99,6 @@ hooksecurefunc("NotifyInspect", function(unit)
             level  = UnitLevel(unit),
             ilevel = -1,
             spec   = nil,
-            hp     = UnitHealthMax(unit),
             timer  = time(),
         }
         data.name, data.realm = UnitName(unit)
@@ -137,7 +135,6 @@ LibEvent:attachEvent("INSPECT_READY", function(this, guid)
                 self.data.ilevel = ilevel
                 self.data.maxLevel = maxLevel
                 self.data.spec = GetInspectSpec(self.data.unit)
-                self.data.hp = UnitHealthMax(self.data.unit)
                 self.data.weaponLevel = weaponLevel
                 self.data.isArtifact = isArtifact
                 LibEvent:trigger("UNIT_INSPECT_READY", self.data)
