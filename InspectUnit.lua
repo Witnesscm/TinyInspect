@@ -5,6 +5,7 @@
 local _, ns = ...
 
 local LibEvent = LibStub:GetLibrary("LibEvent.7000")
+local LibSchedule = LibStub:GetLibrary("LibSchedule.7000")
 local LibItemInfo = LibStub:GetLibrary("LibItemInfo.7000")
 
 --bliz func
@@ -317,6 +318,9 @@ function ShowInspectItemListFrame(unit, parent, ilevel, maxLevel)
     end
     if (sets > 0) then
         frame.level:SetText(frame.level:GetText()..ns.formatSets[sets])
+        if width < 204 then
+            width = 204
+        end
     end
     if (mframe and oframe and (mframe.quality == 6 or oframe.quality == 6)) then
         level = max(mframe.level, oframe.level)
@@ -432,15 +436,25 @@ end)
 --   Player   --
 ----------------
 
-PaperDollFrame:HookScript("OnShow", function(self)
-    if (TinyInspectDB and not TinyInspectDB.ShowCharacterItemSheet) then return end
-    local _, ilevel, _, _, _, maxLevel = LibItemInfo:GetUnitItemLevel("player")
-    ShowInspectItemListFrame("player", self, ilevel, maxLevel)
-end)
+local function ShowPlayerItemListFrame()
+    LibSchedule:AddTask({
+        identity  = "PlayerItemList",
+        timer     = 0.1,
+        elasped   = 0.1,
+        expired   = GetTime() + 1,
+        onExecute = function(self)
+            local count, ilevel, _, _, _, maxLevel = LibItemInfo:GetUnitItemLevel("player")
+            if (count == 0) then
+                if (CharacterFrame:IsShown() and TinyInspectDB and TinyInspectDB.ShowCharacterItemSheet) then
+                    ShowInspectItemListFrame("player", PaperDollFrame, ilevel, maxLevel)
+                end
+                return true
+            else
+                print("TinyInspect: unknown count " .. count)
+            end
+        end
+    })
+end
 
-LibEvent:attachEvent("PLAYER_EQUIPMENT_CHANGED", function(self)
-    if (CharacterFrame:IsShown() and TinyInspectDB and TinyInspectDB.ShowCharacterItemSheet) then
-        local _, ilevel, _, _, _, maxLevel = LibItemInfo:GetUnitItemLevel("player")
-        ShowInspectItemListFrame("player", PaperDollFrame, ilevel, maxLevel)
-    end
-end)
+PaperDollFrame:HookScript("OnShow", ShowPlayerItemListFrame)
+LibEvent:attachEvent("PLAYER_EQUIPMENT_CHANGED", ShowPlayerItemListFrame)
