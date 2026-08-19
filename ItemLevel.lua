@@ -16,6 +16,8 @@ if (GetLocale():sub(1,2) == "zh") then ARTIFACT_POWER = "能量" end
 
 --框架 #category Bag|Bank|Merchant|Trade|GuildBank|Auction|AltEquipment|PaperDoll|Loot
 local function GetItemLevelFrame(self, category)
+    if (self:IsForbidden()) then return end
+
     if (not self.ItemLevelFrame) then
         local fontAdjust = GetLocale():sub(1,2) == "zh" and 0 or -3
         -- local anchor, w, h = self.IconBorder or self, self:GetSize()
